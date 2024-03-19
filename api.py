@@ -11,3 +11,32 @@ réguliers. Le réentraînement est automatisé si le seuil n'est pas respecté.
 pas respecté après le réentraînement, on en alerte les gestionnaires de l'Argus par email.
 
 """
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+class CarDetails(BaseModel):
+    """
+    Data structure that stores information about an used car.
+    """
+    state: str
+    make: str
+    model: str
+    year: int
+    mileage: float
+
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    """
+    Returns a help message.
+    """
+    raise NotImplemented
+
+@app.post("/predict")
+async def predict(car_details: CarDetails):
+    """
+    Predicts the price of a second-hand car and returns the result.
+    """
+    raise NotImplemented
