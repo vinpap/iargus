@@ -32,11 +32,24 @@ async def root():
     """
     Returns a help message.
     """
-    raise NotImplemented
+    message = """Welcome to the IArgus prediction model API.\
+        In order to use the model, send a request to the /predict endpoint
+        with the following parameters in a JSON:
+        - 'state': the two letters that reference the US state where the car was sold
+        - 'make': the make of the car
+        - 'model': the model of the car
+        - 'year': the year the car was manufactures
+        - 'mileage': the car mileage in kilometers."""
+
+    return {"message": message}
 
 @app.post("/predict")
 async def predict(car_details: CarDetails):
     """
     Predicts the price of a second-hand car and returns the result.
     """
+    # Commencer par vérifier la sécurité. Puis :
+    # 1 - charger le modèle depuis MLflow
+    # 2 - faire une prédiction
+    # 3 - renvoyer la prédiction en JSON
     raise NotImplemented

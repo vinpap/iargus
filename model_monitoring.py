@@ -12,7 +12,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
-import mysql.connector
+import mysql
 import mlflow
 from mlflow.models import infer_signature
 from tensorflow.keras.models import Sequential

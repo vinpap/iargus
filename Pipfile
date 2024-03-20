@@ -4,9 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-mlflow = "*"
+mlflow = "==2.11.1"
 mysql-connector-python = "*"
-tensorflow = "*"
+tensorflow = "==2.15.0.post1"
+pytest = "*"
+uvicorn = "*"
+fastapi = "==0.110.0"
+mysql-connector-repackaged = "==0.3.1"
+pydantic = "==2.6.4"
+requests = "==2.31.0"
 
 [dev-packages]
 
