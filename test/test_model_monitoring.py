@@ -35,13 +35,13 @@ def test_test():
     """
     Test for the test_model function.
     """
+    testing_data = pd.read_csv("./test/testing_data.csv")
+    X_test, y_test = preprocess_data(testing_data)
     # If no model has been trained, we train one quickly.
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='iargus'")
     if len(model_versions) == 0:
         train_model(X_test, y_test)
-    testing_data = pd.read_csv("./test/testing_data.csv")
-    X_test, y_test = preprocess_data(testing_data)
     mape = test_model(X_test, y_test)
     assert isinstance(mape, float) and 0 <= mape <=1
     
