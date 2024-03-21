@@ -4,16 +4,18 @@ import logging
 import pickle
 import yaml
 import smtplib
-from email.mime.text import MIMEText
 from datetime import date
+from time import time
+from email.mime.text import MIMEText
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
-import mysql
+import pytest
+import mysql.connector
 import mlflow
+from mlflow import MlflowClient
 from mlflow.models import infer_signature
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
@@ -109,62 +111,67 @@ def train_model(X, y):
 
     model = Sequential()
     model.add(Dense(100, input_shape=(X_train.shape[1],), activation='relu'))
-    model.add(Dense(120, activation='relu'))
+    model.add(Dense(50, activation='relu'))
     model.add(Dense(1, activation='linear'))
     model.compile(loss='mean_absolute_percentage_error', optimizer='adam', metrics=['mean_absolute_percentage_error'])
     mlflow.set_experiment("IArgus")
+    
     #mlflow.keras.log_model(model, 'car_price_predictor')
     #mlflow.keras.autolog()
-    
-    with mlflow.start_run():
+    with mlflow.start_run(run_name=f'train_{int(time())}'):
         signature = infer_signature(X_train, y_train)
         mlflow.keras.autolog()
         model.fit(X_train, y_train, validation_split=0.1, epochs=150, batch_size=100, callbacks=[callback])
         
-        # A EXÉCUTER AVEC UN PC PLUS PUISSANT
-        """model_info = mlflow.keras.log_model(
+        model_info = mlflow.keras.log_model(
             model=model,
-            artifact_path="/IArgus",
+            artifact_path="iargus",
             signature=signature,
             input_example=X_train,
-            registered_model_name="/IArgus"
-        )"""
+            registered_model_name="iargus"
+        )
         
 
     logger.info("The model has been trained. Metrics related to it are available on MLflow")
     # We update the config file to change the last training date
-    with open("./config.yml", "rw") as config_file:
+    with open("./config.yml", "r") as config_file:
         config = yaml.safe_load(config_file)
+    with open("./config.yml", "w") as config_file:
         config["monitoring"]["last_training"] = date.today()
         yaml.dump(config, config_file)
     
     return test_model(X_test, y_test)
 
+@pytest.mark.skip(reason="This is NOT a unit test")
 def test_model(X_test, y_test):
     """
     Evaluates the model with the provided data and returns the 
     mean absolute percentage error.
     """
+
     logger.info("Testing model")
     mlflow.set_experiment("IArgus")
-    # Chemin de modèle temporaire, remplacer par l'URI sur MLflow
-    eval_results = mlflow.evaluate(
-        model="/home/vincent/Development/iargus/mlartifacts/593420517438876381/6e9ba1a01edd459ebb88acdf3f3449d1/artifacts/model",
-        data=X_test,
-        targets=y_test,
-        model_type='regressor'
-        )
-    print(eval_results)
-    raise
-    return 0.15
+    
+    client = MlflowClient()
+    model_versions = client.search_model_versions(f"name='iargus'")
+    if len(model_versions) == 0:
+        raise ValueError("No model has been trained. Call train_model first")
+
+    last_version = model_versions[0].version
+    model_uri = f"models:/iargus/{last_version}"
+    model = mlflow.keras.load_model(model_uri)
+
+    # Calculer la métrique "manuellement"
+    with mlflow.start_run(run_name=f'test_{int(time())}'):
+        mlflow.keras.autolog()
+        y_pred = model.predict(X_test)
+        mape = mean_absolute_percentage_error(y_test, y_pred)
+        mlflow.log_metric("MAPE", mape)
+
+
+    return mape
 
 if __name__ == "__main__":
-
-    """# TEMPORAIRE
-    all_car_data = get_data()
-    X, y = preprocess_data(all_car_data)
-    train_model(X, y)
-    raise"""
 
     # Retrieving all the records added after the last training
     with open("./config.yml") as config_file:
@@ -178,8 +185,6 @@ if __name__ == "__main__":
         logger.warning("No new data has been added since last training")
         logger.warning("Exiting")
         sys.exit(0)
-
-
     X_test, y_test = preprocess_data(car_data)
     mape = test_model(X_test, y_test)
 
@@ -192,17 +197,11 @@ if __name__ == "__main__":
 
         if new_mape > mape_threshold:
             subject = "Your model performance is getting low!"
-            email = f"""This is an automatic message, please do not reply.\
-                You are receiving this message because your model IArgus has\
-                been tested with new data and its performance is getting low
-                despite retraining it with new data.\
-                On average, the model has a relative absolute error of {new_mape*100}%,\
-                which is over the set threshold of {mape_threshold*100}%.
-                Please get in touch with the IArgus data team for more information.
+            email = f"""This is an automatic message, please do not reply.\n You are receiving this message because your model IArgus has been tested with new data and its performance is getting low despite retraining it with new data. On average, the model has a relative absolute error of {new_mape*100}%, which is over the set threshold of {mape_threshold*100}%. Please get in touch with the IArgus data team for more information.
                 """
             send_email_alert(subject=subject, email=email)
             logger.warning(f"Mean Absolute Percentage Error is too high after retraining. {mape} still exceeds threshold of {mape_threshold}. An alert has been sent by email to the application admin")
-    
+        
     else:
         logger.info(f"The model was tested with new data. Its mean absolute percentage error is still below the threshold ({mape} < {mape_threshold})")
         

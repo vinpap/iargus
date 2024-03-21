@@ -1,7 +1,14 @@
+"""
+Unit tests for model_monitoring.py. Note that a MLflow server needs to be active in
+order for these tests to run.
+"""
+
 import pandas as pd
 import numpy as np
+import mlflow
+from mlflow import MlflowClient
 
-from model_monitoring import preprocess_data
+from model_monitoring import preprocess_data, test_model, train_model
 
 def test_preprocessing():
     """
@@ -23,3 +30,18 @@ def test_preprocessing():
     for row_index in range(len(X_test)):
         assert np.count_nonzero(X_test[row_index,:] == 0) >= minimum_zeros_count
         assert np.count_nonzero(X_test[row_index,:] == 1) <= 5
+
+def test_test():
+    """
+    Test for the test_model function.
+    """
+    # If no model has been trained, we train one quickly.
+    client = MlflowClient()
+    model_versions = client.search_model_versions(f"name='iargus'")
+    if len(model_versions) == 0:
+        train_model(X_test, y_test)
+    testing_data = pd.read_csv("./test/testing_data.csv")
+    X_test, y_test = preprocess_data(testing_data)
+    mape = test_model(X_test, y_test)
+    assert isinstance(mape, float) and 0 <= mape <=1
+    

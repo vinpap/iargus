@@ -1,3 +1,3 @@
 monitoring:
-  last_training: 2020-03-20
-  MAPE_threshold: 0.20
+  MAPE_threshold: 0.2
+  last_training: 2020-03-21

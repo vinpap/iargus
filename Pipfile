@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 mlflow = "==2.11.1"
-mysql-connector-python = "*"
 tensorflow = "==2.15.0.post1"
 pytest = "*"
 uvicorn = "*"
@@ -13,6 +12,8 @@ fastapi = "==0.110.0"
 mysql-connector-repackaged = "==0.3.1"
 pydantic = "==2.6.4"
 requests = "==2.31.0"
+mysql-connector-python = "*"
+httpx = "*"
 
 [dev-packages]
 

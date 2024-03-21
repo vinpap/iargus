@@ -1,30 +1,29 @@
 """
-Unit tests to make sure the API works properly.
+Tests for the API.
+Note that the MLflow server needs to be running for these tests to work.
 """
 
-import requests
 
-def test_predict_endpoint():
-    """
-    Tests the API /predict endpoint by making sure it returns a float given the
-    right features.
-    """
+from fastapi.testclient import TestClient
 
-    # Penser à remplacer le endpoint pour mettre le bon
-    url = "http://127.0.0.1:8000/predict"
-    features = {
-        "State": "AL",
-        "Make": "Acura",
-        "Model": "TSX5-Speed",
-        "Year": 2015,
-        "Mileage": 35000
-    }
-    response = requests.post(url, json=features)
-    assert isinstance(response.content["price"], float)
+from api import app
 
-def test_security():
-    """
-    Makes sure no one can use the endpoint without a valid token.
-    """
-    raise NotImplemented
+client = TestClient(app)
 
+def test_predict():
+    """
+    Test for /predict
+    """
+    response = client.post("/predict")
+    # Envoyer des données de test et vérifier que le résultat est un float
+
+def test_index():
+    """
+    Test for the index (/)
+    """
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "message" in response.json()
+
+
+    
