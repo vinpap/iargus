@@ -8,7 +8,7 @@ import numpy as np
 import mlflow
 from mlflow import MlflowClient
 
-from model_monitoring import preprocess_data, test_model, train_model
+from model_monitoring import preprocess_features, test_model, train_model
 
 def test_preprocessing():
     """
@@ -18,9 +18,8 @@ def test_preprocessing():
     using one-hot vectors works well.
     """
     testing_data = pd.read_csv("./test/testing_data.csv")
-    X_test, y_test = preprocess_data(testing_data)
+    X_test = preprocess_features(testing_data)
     assert len(X_test) == len(testing_data)
-    assert len(y_test) == len(testing_data)
     
     unique_makes_count = testing_data["make"].nunique()
     unique_models_count = testing_data["model"].nunique()
@@ -36,7 +35,8 @@ def test_test():
     Test for the test_model function.
     """
     testing_data = pd.read_csv("./test/testing_data.csv")
-    X_test, y_test = preprocess_data(testing_data)
+    X_test = preprocess_features(testing_data)
+    y_test = testing_data["price"].values
     # If no model has been trained, we train one quickly.
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='iargus'")

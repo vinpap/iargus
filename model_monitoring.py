@@ -56,14 +56,13 @@ def get_data(most_recent_only: bool=False, last_training_date=date.today()):
             car_details_df.drop(columns=["id"], inplace=True)
             return car_details_df
 
-def preprocess_data(raw_data: pd.DataFrame):
+def preprocess_features(raw_data: pd.DataFrame):
     """
     Preprocess raw data in order to turn in into features usable by
     the model.
 
     Preprocessing includes encoding categorical features using OHE.
-    Returns a tuple (X, y) where X contains the features and y the target 
-    value.
+    Returns the features as a numpy array.
     """
     logger.info("Preprocessing data")
     try:
@@ -76,8 +75,7 @@ def preprocess_data(raw_data: pd.DataFrame):
     cat_values = raw_data[["state", "make", "model"]]
     one_hot_vec = encoder.transform(cat_values).toarray()
     X = np.hstack((one_hot_vec, raw_data["year"].values[:, None], raw_data["mileage"].values[:, None]))
-    y = raw_data["price"].values
-    return X, y
+    return X
 
 def send_email_alert(subject: str, email: str):
     """
@@ -185,14 +183,16 @@ if __name__ == "__main__":
         logger.warning("No new data has been added since last training")
         logger.warning("Exiting")
         sys.exit(0)
-    X_test, y_test = preprocess_data(car_data)
+    X_test = preprocess_features(car_data)
+    y_test = car_data["price"].values
     mape = test_model(X_test, y_test)
 
     if mape > mape_threshold:
         logger.warning(f"Mean Absolute Percentage Error is too high after testing the model with new data. {mape} exceeds threshold of {mape_threshold}. Model will be retrained using the new data")
         # Retrieving ALL data in the database
         all_car_data = get_data()
-        X, y = preprocess_data(all_car_data)
+        X = preprocess_features(all_car_data)
+        y = all_car_data["price"].values
         new_mape = train_model(X, y)
 
         if new_mape > mape_threshold:
