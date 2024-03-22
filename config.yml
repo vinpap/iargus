@@ -1,6 +1,0 @@
-monitoring:
-  MAPE_threshold: 0.2
-  last_training: 2020-03-21
-security:
-  ssl_certificate_path: ./cert.pem
-  ssl_key_path: ./key.pem
