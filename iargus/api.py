@@ -79,7 +79,7 @@ async def root():
     return {"message": message}
 
 @app.post("/predict")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def predict(request: Request, car_details: CarDetails):
     """
     Predicts the price of a second-hand car and returns the result.
