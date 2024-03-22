@@ -1,6 +1,0 @@
-fastapi==0.110.0
-mlflow==2.11.1
-mysql_connector_repackaged==0.3.1
-pydantic==2.6.4
-Requests==2.31.0
-tensorflow==2.15.0.post1

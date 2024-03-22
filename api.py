@@ -12,7 +12,13 @@ pas respecté après le réentraînement, on en alerte les gestionnaires de l'Ar
 
 """
 
-from fastapi import FastAPI
+import yaml
+import ssl
+
+from fastapi import FastAPI, Request
+from slowapi.errors import RateLimitExceeded
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
 from pydantic import BaseModel
 import pandas as pd
 import mlflow
@@ -31,6 +37,30 @@ class CarDetails(BaseModel):
     mileage: float
 
 app = FastAPI()
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.on_event("startup")
+async def startup():
+    """
+    Gets the API ready.
+
+    Includes security measures such as token management, HTTPS, rate limiting...
+    """
+    with open("./config.yml", "r") as config_file:
+        config = yaml.safe_load(config_file)
+        ssl_cert_filepath = config["security"]["ssl_certificate_path"]
+        ssl_key_filepath = config["security"]["ssl_key_path"]
+
+    # Loading the SSL certificate and key
+    # WARNING: this is a certificate for testing purpose only. In production,
+    # get a certificate from a trusted source instead.
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(ssl_cert_filepath, keyfile=ssl_key_filepath)
+
+
 
 @app.get("/")
 async def root():
@@ -49,7 +79,8 @@ async def root():
     return {"message": message}
 
 @app.post("/predict")
-async def predict(car_details: CarDetails):
+@limiter.limit("1/minute")
+async def predict(request: Request, car_details: CarDetails):
     """
     Predicts the price of a second-hand car and returns the result.
     """
