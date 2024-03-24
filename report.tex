@@ -197,6 +197,7 @@
     Enfin, notre API réalise une validation des données qu'elle reçoit. Autrement dit, des mécanismes ont été mis en place pour s'assurer que les informations envoyées par l'utilisateur sont bien conformes à ce qui est attendu. Pour le endpoint /predict, par exemple, cela consiste à s'assurer que le nom de l'état est bien une chaîne de caractères, l'année un entier, etc... Ceci nous permet de nous assurer qu'un utilisateur distrait ou mal intentionné ne peut pas faire bugger notre système en envoyant le mauvais type de données.
 
     L'API a été développée en Python avec le framework FastAPI. FastAPI permet de développer des API web rapidement, en minimisant les temps de calcul nécessaires pour l'API. De plus, FastAPI offre des fonctionnalités qui permettent de rapidement mettre en place des mécanismes tels que la limitation du nombre de requêtes ou la validation des données entrantes.
+
     \subsection{Suivi du modèle}
 
     Le suivi du modèle englobe les composants qui nous permettent de visualiser les performances du modèle au cours du temps et d'envoyer des alertes si jamais celles-ci passent en-dessous d'un seuil acceptable. 
@@ -214,28 +215,84 @@
     \begin{itemize}
         \item un dashboard généré par MLflow, hébergé sur un serveur local
         \item un script exécuté automatiquement à intervalles réguliers qui teste le modèle, le réentraîne si besoin et envoie des alertes par e-mail en cas de problème
-        \item la base de données qui contient toutes les informations concernant les ventes de voitures d'occasion, continuellement alimentée par l'Argus.
+        \item la base de données MySQL qui contient toutes les informations concernant les ventes de voitures d'occasion, continuellement alimentée par l'Argus.
     \end{itemize}
 
-    [SCREENSHOT DE MLflow]
+
+    Lors de son exécution, le script de monitorage commence par collecter les données depuis la base de données MySQL. Celles-ci sont stockées dans une table car\_details qui recense également la data d'ajout de chaque transaction dans la base de données. Cette information est essentielle car c'est elle qui permet au script de savoir quelles données utiliser pour tester le modèle. En effet, seules les données ajoutées à la base de données après le dernier entraînement du modèle sont utilisées. L'intérêt est de vérifier que le modèle reste performant même avec des données qu'il n'a jamais vues et d'éviter le \textbf{concept drift}. Le concept drift est un phénomène de dégradation des performances d'un modèle lorsqu'il est confronté à des données statistiquement différentes de celles avec lesquelles il a été entraîné. 
+    
+    Nous pouvons donner un exemple concret applicable à notre cas : imaginons qu'une ou plusieurs marques de voiture présentes dans le jeu de données d'entraînement aient subi des crises après l'entraînement du modèle (accidents graves impliquant leurs véhicules, scandales, chute de la demande dans le secteur automobile...). Ces événements sont susceptibles d'influencer les prix de vente des voitures d'occasion. Cependant, notre modèle a été entraîné avant ces événements. Ses prédictions n'en tiennent donc pas compte, et cela peut affecter ses performances. Cet exemple est une illustration du concept drift : \textbf{les relations entre les différentes variables ont changé}.
+
+    [DIAGRAMME DE FLUX POUR MONTRER LE FONCTIONNEMENT DU SCRIPT]
+
+    Dans le cas où la MAPE du modèle serait supérieure à 0,2, le script lance un réentraînement du modèle en utilisant cette fois toutes les données disponibles, anciennes comme nouvelles. Une fois ceci fait, la MAPE du modèle nouvellement réentraîné est calculé. Deux cas de figure sont ensuite possibles :
+    \begin{itemize}
+        \item la MAPE est repassée sous 20\% et le script termine son exécution
+        \item la MAPE reste supérieure au seuil de 20\% malgré le réentraînement du modèle. Dans cette situation, une intervention humaine est nécessaire pour résoudre le problème, et le script va donc automatiquement alerter l'équipe technique d'IArgus.
+    \end{itemize}
 
     [SCREENSHOT QUI MONTRE LE MAIL D'ALERTE REÇU]
 
+    Dans le deuxième cas, l'alerte est lancée via un e-mail envoyé automatiquement par le script de monitorage. Pour cela, le script passe par un serveur SMTP, dont l'URL et le port à utiliser sont paramétrables dans un fichier de configuration YAML. Il est possible d'utiliser un serveur SMTP comme celui de GMail, ou de coder le sien. Le serveur de GMail a été utilisé pour réaliser les tests nécessaires à l'élaboration de ce dossier.
+
+    [SCREENSHOT DE MLflow]
+
+    MLflow est utilisé afin de pouvoir suivre le modèle. MLflow permet à l'équipe technique d'IArgus de suivre les performances du modèle dans ses différentes versions, facilitant ainsi la résolution de problèmes de performances éventuels. Le dashboard de MLflow est disponible via un navigateur web et s'exécute en local ou sur un serveur dédié dont l'URL peut être spécifiée dans le fichier de configuration YAML.
+    
+
     \subsection{Tests et intégration continue}
+
+    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Ces tests se divisent en deux catégories :
+    \begin{itemize}
+        \item les tests unitaires qui vérifient le bon fonctionnement des différentes fonctions du script de monitorage
+        \item les tests de points de terminaison codés grâce aux fonctionnalités de test proposées par FastAPI. Ces tests simulent l'envoi de requêtes aux différents points de terminaison de l'API et vérifient que les données renvoyées par l'API sont conformes à celles que l'on attend.
+    \end{itemize}
+
+    Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans un fichier de configuration YAML lu automatiquement par la machine virtuelle qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
+    \begin{itemize}
+        \item installer toutes les dépendances du projet dans un environnement virtuel avec pipenv
+        \item lancer MLflow sur l'hôte local
+        \item exécuter un script setup\_tests.py qui met en place les différents éléments nécessaires à l'exécution des tests (chargement d'un jeu de données de test fourni dans le dépôt, entraînement d'un modèle avec ces données)
+        \item exécuter les tests avec pytest.
+    \end{itemize}
+
+
     \section{Intégration du service dans l'application}
 
-    [PENSER À METTRE UN SCREENSHOT DU RÉSULTAT DE LA PRÉCISION TEL QU'AFFICHÉ DANS L'APPLICATION WEB]
+    [PENSER À METTRE UN SCREENSHOT DU RÉSULTAT DE LA PRÉDICTION TEL QU'AFFICHÉ DANS L'APPLICATION WEB]
+
+    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API [INSÉRER LIEN VERS LA SECTION], un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur, comme nous pouvons le voir dans la figure n[INSÉRER LIEN FIGURE].
 
     \section{Packaging et mise en place du modèle}
+
+    Comme nous l'avons vu, IArgus est constitué de plusieurs composants qui interagissent entre eux : l'API, le serveur MLflow, une base de données MySQL... Il était donc important d'automatiser au maximum l'installation, la configuration et la lancement du projet pour simplifier la tâche des équipes techniques qui devront mettre en place IArgus. Dans ce but, deux scripts exécutables avec \textbf{Bash} sont fournis pour respectivement installer et exécuter IArgus sur une machine Linux où Python 3 est installé. Le script d'installation réalise les tâches suivantes pour l'utilisateur qui souhaite installer IArgus :
+    \begin{itemize}
+        \item l'installation de Git
+        \item le clonage du dépôt GitHub où se trouve le code
+        \item l'installation de toutes les dépendances nécessaires
+    \end{itemize} 
+
+    Le script d'exćecution automatise les tâches suivantes :
+    \begin{itemize}
+        \item exécution d'un serveur MLflow en local (si l'utilisateur n'utilise pas de serveur dédié)
+        \item connexion au serveur MySQL spécifié par l'utilisateur, et création d'une base de données pour IArgus si elle n'existe pas déjà
+        \item lancement de l'API
+    \end{itemize}
+
+    Pour permettre à l'utilisateur de modifier facilement certains aspects de la configuration tels que l'URL du serveur MLflow ou le certificat de sécurité SSL à utiliser, la plupart des paramètres du projet sont gérés dans un fichier de configuration YAML. Ainsi, l'utilisateur n'a pas besoin de toucher au code lorsqu'il change de serveur SMTP pour ses alertes e-mail, par exemple. On notera cependant que certains paramètres tels que le nom d'utilisateur et le mot de passe MySQL ou encore le mot de passe pour se connecter au serveur SMTP sont trop sensibles pour être visibles dans un fichier texte ; ces imformations sont demandées à l'utilisateur lorsqu'il lance le script qui permet d'exécuter IArgus.
 
     \newpage
     \section*{Conclusion}
     
+    Ce dossier a présenté l'intégration d'un service d'intelligence artificielle à une application web existante via une API. Toutes les étapes ont été couvertes, du choix du modèle à la conception de scripts d'installation en passant par la mise en place d'un système de tracking des performances de l'IA.
+
+    Cependant, certains aspects du projet restent améliorables :
+    \begin{itemize}
+        \item pour plus de sécurité, l'API pourrait mettre en place un système de gestion des utilisateurs et générer une clé de sécurité unique pour chacun. Cela éviterait d'utiliser une seule clé de sécurité et permettrait d'authentifier les utilisateurs de l'API
+        \item IArgus pourrait être configuré pour envoyer des alertes par e-mail à une liste d'adresses e-mail, et pas à une seule adresse comme c'est le cas actuellement
+        \item enfin, des scripts d'installation et d'exécution pourraient être écrits pour permettre de déployer IArgus sur un serveur Windows.
+    \end{itemize}
 
     \addcontentsline{toc}{section}{Conclusion}
-
-    \newpage
-    \begin{thebibliography}{5}
-    \end{thebibliography}
 
     \end{document}

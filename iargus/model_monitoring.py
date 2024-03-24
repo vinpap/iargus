@@ -91,6 +91,8 @@ def send_email_alert(subject: str, email: str):
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = ', '.join(recipients)
+    # ATTENTION : GMAIL EST CODÉ EN DUR ICI !!!!!!!!!!!!! UTILISER LA VARIABLE 
+    # D'ENVIRONNEMENT À LA PLACE
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
        smtp_server.login(sender, password)
        smtp_server.sendmail(sender, recipients, msg.as_string())
