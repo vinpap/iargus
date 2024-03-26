@@ -18,10 +18,10 @@ with mysql.connector.connect(
             current_date = date.today()
 
             df = pd.read_csv("./experiments/true_car_listings.csv").sample(n=300000)
-            df = df[["State", "Make", "Model", "Year", "Mileage", "Price"]]
-            df["State"] = df["State"].str.strip()
-            df["Make"] = df["Make"].str.strip()
-            df["Model"] = df["Model"].str.strip()
+            df = df[["state", "make", "model", "year", "mileage", "price"]]
+            df["state"] = df["state"].str.strip()
+            df["make"] = df["make"].str.strip()
+            df["model"] = df["model"].str.strip()
             df["current_date"] = current_date.strftime("%Y-%m-%d")
             rows = list(df.itertuples(index=False, name=None))
             values = ', '.join(map(str, rows))

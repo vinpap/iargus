@@ -173,6 +173,21 @@ def test_model(X_test, y_test):
 
 if __name__ == "__main__":
 
+    # If no model has been trained, we train one now
+    client = MlflowClient()
+    model_versions = client.search_model_versions(f"name='iargus'")
+    if len(model_versions) == 0:
+        logger.warning("No model found, training one now")
+        car_data = get_data(most_recent_only=False)
+        if len(car_data) == 0:
+            logger.warning("The database is empty")
+            logger.warning("Exiting")
+            sys.exit(0)
+        X = preprocess_features(car_data)
+        y = car_data["price"].values
+        train_model(X, y)
+        sys.exit(0)
+
     # Retrieving all the records added after the last training
     with open("./config.yml") as config_file:
         config = yaml.safe_load(config_file)

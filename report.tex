@@ -110,7 +110,7 @@
 
     \section*{Introduction}
     Depuis bientôt un siècle, l'Argus est le magazine de référence pour estimer la valeur d'un véhicule d'occasion. Fort de son statut en France, l'hebdomadaire a décidé de s'attaquer au marché américain en lançant son nouveau service, IArgus, aux États-Unis. Ce service en ligne proposera une IA qui estimera automatiquement le juste prix d'un véhicule en se basant sur des caractéristiques comme son modèle, son année de vente, son kilométrage...
-    La direction de l'Argus a fait appel à nous pour développer ce nouveau service et leur livrer avec toute la documentation nécessaire à sa mise en place, puis intégrer ce modèle à l'application IArgus qu'ils ont créée.
+    La direction de l'Argus a fait appel à nous pour développer ce nouveau service et le leur livrer avec toute la documentation nécessaire à sa mise en place, puis intégrer ce modèle à l'application IArgus qu'ils ont créée.
 
     La totalité du code relatif à ce dossier est disponible sur \href{https://github.com/vinpap/iargus}{GitHub}.
     \section{Contexte}
@@ -119,13 +119,13 @@
     \begin{figure}[h!]
         \includegraphics[width=12cm]{form}
         \centering
-        \caption{Disponible sur la page d'accueil du site, ce formulaire permet à l'utilisateur d'entrer les caractéristiques de sa voiture pour obtenir une estimation}
+        \caption{Disponible sur la page d'accueil du site, ce formulaire permet à l'utilisateur d'entrer les caractéristiques de sa voiture pour obtenir une estimation de son prix.}
         \centering
     \end{figure}
     \subsection{Les données disponibles}
     Pour nous permettre de mener notre mission à bien, l'Argus met à notre disposition un jeu de données qui recense plus de 800 000 ventes de voitures d'occasion. Pour chaque transaction sont indiqués :
     \begin{itemize}
-        \item le prix de vente
+        \item le prix de vente, en dollars américains
         \item l'année de production de la voiture
         \item le nombre de kilomètres qu'elle a parcourus
         \item la ville où s'est déroulée la vente
@@ -134,34 +134,57 @@
         \item la marque de la voiture
         \item son modèle.
     \end{itemize}
-    \textbf{Remarque}: le jeu de données présenté ci-dessus est disponible \href{https://www.kaggle.com/datasets/harikrishnareddyb/used-car-price-predictions/data}{ici}.
-    Par ailleurs, le client nous fait savoir qu'il reçoit chaque mois de nouvelles informations sur le même schéma, qu'il stocke dans une base de données. Ces données pourront être utilisées pour améliorer le modèle et vérifier qu'il reste performant.
+    \textbf{Remarque} : le jeu de données présenté ci-dessus est disponible \href{https://www.kaggle.com/datasets/harikrishnareddyb/used-car-price-predictions/data}{ici}.
+    
+    Par ailleurs, le client nous fait savoir qu'il reçoit chaque mois de nouvelles données de transactions similaires, qu'il stocke dans une base de données MySQL. Ces données pourront être utilisées pour améliorer le modèle et vérifier qu'il reste performant.
     \subsection{Exigences du client}
     Le client a quelques exigences très spécifiques en ce qui concerne le service d'intelligence artificielle dont il a besoin. Celles-ci sont les suivantes :
     \begin{itemize}
-        \item l'équipe informatique d'IArgus doit disposer d'un moyen qui leur permette de visualiser simplement les performances des l'intelligence artificielle, afin de s'apercevoir rapidement de tout problème
-        \item Les estimations de prix d'IArgus doivent être suffisamment précises pour être exploitables par l'utilisateur. Ainsi, le seuil suivant nous est imposé : \textbf{l'intelligence artificielle doit produire des estimations de prix qui sont égales aux prix "réels" contenus dans les bases de données de l'Argus, avec une tolérance de +/- 20\%}. \item dans le cas où ce seuil de 20\% serait dépassé, l'équipe informatique veut immédiatement en être avertie par e-mail
-        \item enfin, les dirigeants de l'Argus souhaite que l'accès au service d'IA soit sécurisé, afin que seuls l'application IArgus et les membres de l'équipe de développement puissent l'utiliser.
+        \item l'équipe informatique d'IArgus doit disposer d'un moyen qui leur permette de visualiser simplement les performances de l'intelligence artificielle, afin de s'apercevoir rapidement de tout problème
+        \item Les estimations de prix d'IArgus doivent être suffisamment précises pour être exploitables par l'utilisateur. Ainsi, le seuil suivant nous est imposé : \textbf{l'intelligence artificielle doit produire des estimations de prix qui sont égales aux prix "réels" contenus dans les bases de données de l'Argus, avec une tolérance de +/- 20\%}. 
+        \item dans le cas où ce seuil de 20\% serait dépassé, l'équipe informatique veut immédiatement en être avertie par e-mail
+        \item enfin, les dirigeants de l'Argus souhaitent que l'accès au service d'IA soit sécurisé, afin que seuls l'application IArgus et les membres de l'équipe de développement puissent l'utiliser.
     \end{itemize}
+
+    \subsection{Gestion de projet}
+
+    Le travail nécessaire à ce projet a été organisé en utilisant la méthode \textbf{kanban}. Cette technique de gestion de projet repose sur l'utilisation d'un tableau qui recense les différentes tâches avec leur statut (terminées, à revoir, en cours, etc...). Un aspect important de ce tableau est qu'il limite le nombre de tâches présentes dans chaque colonne. L'objectif est de limiter la charge de travail sur les personnes qui travaillent sur le projet et de les encourager à terminer leurs tâches (plutôt que de disperser leurs efforts sur un grand nombre de tâches). Dans le cadre de ce projet, le tableau Kanban proposé par GitHub a été utilisé.
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{kanban}
+        \centering
+        \caption{Tableau kanban du projet. On remarque que des limites sont imposées au nombre de tâches non commencées ou en cours.}
+        \centering
+    \end{figure}
+    
     \section{Architecture du projet}
     Le service d'IA est constitué de plusieurs composants :
     \begin{itemize}
         \item un modèle d'intelligence artificielle entraîné avec les données fournies par l'Argus. Il prédit ensuite une estimation de prix en fonction des données entrées par l'utilisateur.
         \item une API qui expose ce modèle. C'est le seul composant qui interagit avec l'application web IArgus. Lorsque l'utilisateur soumet un formulaire avec les informations de son véhicule, celles-ci sont automatiquement transmises de façon sécurisée à l'API via une requête HTTP. L'API communique ensuite avec le modèle pour obtenir une estimation de prix et renvoie le résultat à l'application, qui peut l'afficher pour l'utilisateur. 
-        \item un dashboard qui permet aux techniciens de l'équipe informatique de visualiser l'évaluation des performances du modèle et de voir l'historique des entraînements et tests réalisés
-        \item un script de monitorage. Exécuté une fois par mois pour tenir compte des nouvelles données reçues, il teste le modèle avec les nouvelles données et lance un nouvel entraînement si ses performances se sont trop dégradées (i.e. si l'erreur moyenne du modèle a dépassé 20\%). Dans le cas où l'erreur resterait malgré tout trop élevée après cela, le script envoie une alerte par e-mail à l'équipe technique.
-        \item une base de données qui stocke toutes les données utilisées par le modèle. Les nouvelles données reçues chaque mois par l'Argus y sont automatiquement ajoutées.
+        \item un dashboard qui permet aux techniciens de l'équipe informatique de visualiser l'évolution des performances du modèle et de voir l'historique des entraînements et tests réalisés
+        \item un script de monitoring. Exécuté une fois par mois pour tenir compte des nouvelles données reçues, il teste le modèle avec les nouvelles données et lance un nouvel entraînement si ses performances se sont trop dégradées (i.e. si l'erreur moyenne du modèle a dépassé 20\%). Dans le cas où l'erreur resterait malgré tout trop élevée après cela, le script envoie une alerte par e-mail à l'équipe technique.
+        \item une base de données MySQL qui stocke toutes les données utilisées par le modèle. Les nouvelles données reçues chaque mois par l'Argus y sont automatiquement ajoutées.
     \end{itemize}
-    [Mettre un schéma général ici qui montre le modèle, l'API, le script de monitoring, le serveur MLflow et la BDD]
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{architecture_E3}
+        \centering
+        \caption{Schéma général d'IArgus. Les estimations de prix sont récupérées en passant par l'API qui contrôle l'accès au modèle d'IA.}
+        \centering
+    \end{figure}
 
     \subsection{Le modèle d'intelligence artificielle}
-    Le modèle d'intelligence artificielle utilisé pour réaliser les estimations de prix est un \textbf{Deep Neural Network} (abrégé DNN), ou \textbf{Réseau Neuronal Profond} en français. Un réseau neuronal est une type de modèle d'intelligence artificielle inspiré par le cerveau humain, plus précisément par les neurones et les connexions synaptiques entre eux. C'est un type de machine learning appelé deep learning qui consiste à utiliser des neurones ou nodes interconnectés, organisés en plusieurs couches. Ce modèle a été choisi suite à la réalisation d'un processus de benchmarking qui a opposé le DNN à plusieurs autres modèles tels que SGD et SVR.
+    Le modèle d'intelligence artificielle utilisé pour réaliser les estimations de prix est un \textbf{Deep Neural Network} (abrégé DNN), ou \textbf{Réseau Neuronal Profond} en français. Un réseau neuronal est un type de modèle d'intelligence artificielle inspiré par le cerveau humain, plus précisément par les neurones et les connexions synaptiques entre eux. C'est un type de machine learning appelé deep learning qui consiste à utiliser des neurones ou nodes interconnectés, organisés en plusieurs couches. Ce modèle a été choisi suite à la réalisation d'un processus de benchmarking qui a opposé le DNN à plusieurs autres modèles tels que SGD et SVR.
 
-    [Comparaison hors du cadre du dossier. Dans la version finale (après le rendu du premier avril), ajouter un résumé des modèles testés et résultats obtenus en annexe et y ajouter une référence.]
     
-    [SCHÉMA DE LA STRUCTURE DU RÉSEAU]
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{dnn}
+        \centering
+        \caption{Un DNN est composé de couches successives de neurones. Ici, une représentation du réseau utilisé par IArgus : après avoir été numérisées pour constituer un vecteur, les informations concernant la voiture sont traitées par deux couches de neurones avant de passer par une couche de sortie. Cette couche de sortie calcule une unique valeur qui représente le prix estimé par notre modèle.}
+    \end{figure}
 
-    Toutes les données disponibles ne sont pas utilisées par le modèle. Parmi les données disponibles pour chaque vente de voiture [AJOUTER LIEN], seules les informations suivantes sont utilisées :
+    Toutes les données disponibles ne sont pas utilisées par le modèle. Parmi les données disponibles pour chaque vente de voiture, seules les informations suivantes sont utilisées :
     \begin{itemize}
         \item le prix de vente
         \item l'année de production de la voiture
@@ -170,8 +193,8 @@
         \item la marque de la voiture
         \item son modèle.
     \end{itemize}
-    Le VIN n'est pas utilisé car il s'agit d'un identifiant purement administratif destiné à assurer le suivi d'un véhicule unique. Il est créé à partir d'informations tells que la ville de production de la voiture, un code de sécurité, et le numéro de série de la voiture, entre autres données. Les informations pertinentes incluses dans ce numéro telles que la marque de la voiture étant déjà disponibles dans notre jeu de données, nous n'utiliserons donc pas le VIN ici.
-    La ville où se déroule la vente de voiture n'est pas non plus utilisée par notre modèle. Dans ce cas, ce choix est fait dans un souci de performances. En effet, un DNN ne peut traiter que des données numériques : les informations telles que la marque de la voiture, son modèle, la ville ou l'état de la transaction doivent être \textbf{encodées} pour être exploitables par le modèle d'IA. Ceci est accompli grâce à la technique du \textbf{One-Hot Encoding}, qui consiste à convertir des valeurs discrètes (telles qu'un nom de marque par exemple) en vecteurs constitués de 1 et de 0 uniquement. Or, la taille de ce vecteur dépend du nombre de valeurs uniques présentes dans nos données pour chaque variable (56 dans le cas de l'état, par exemple). Convertir la ville par cette technique génèrerait des vecteurs à plusieurs milliers de dimensions, ce qui augmenterait considérablement les besoins en terme de mémoire vive et de puissance de calcul. Toutes ces raisons expliquent pourquoi la ville de vente a été mise de côté.
+    Le VIN n'est pas utilisé car il s'agit d'un identifiant purement administratif destiné à assurer le suivi d'un véhicule. Il est créé à partir d'informations telles que la ville de production de la voiture, un code de sécurité, et le numéro de série de la voiture, entre autres données. Les informations pertinentes incluses dans ce numéro comme la marque de la voiture étant déjà disponibles dans notre jeu de données, nous n'utiliserons donc pas le VIN ici.
+    La ville où se déroule la vente de voiture n'est pas non plus utilisée par notre modèle. Dans ce cas, ce choix est fait dans un souci de performances. En effet, un DNN ne peut traiter que des données numériques : les informations telles que la marque de la voiture, son modèle, la ville ou l'état de la transaction doivent être \textbf{encodées} pour être exploitables par le modèle d'IA. Ceci est accompli grâce à la technique du \textbf{One-Hot Encoding}, qui consiste à convertir des valeurs discrètes (un nom de marque, par exemple) en vecteurs constitués de 1 et de 0 uniquement. Or, la taille de ce vecteur dépend du nombre de valeurs uniques présentes dans nos données pour chaque variable (56 dans le cas de l'état, par exemple). Utiliser cette technique pour convertir le nom de la ville en nombres génèrerait des vecteurs à plusieurs milliers de dimensions, ce qui augmenterait considérablement les besoins en terme de mémoire vive et de puissance de calcul. Toutes ces raisons expliquent pourquoi la ville de vente a été mise de côté.
     
     Une fois que notre DNN est entraîné avec les données fournies par l'Argus, il devient possible de l'utiliser pour estimer des prix de vente. Cependant, l'application n'interagit pas directement avec le modèle. À la place elle envoie des requêtes à un composant qui fait office d'intermédiaire, \textbf{l'API}.
     \subsection{l'API}
@@ -179,11 +202,11 @@
 
     Utiliser une API pour donner accès à un service confère plusieurs avantages :
     \begin{itemize}
-        \item offrir une fonctionnalité via une API permet de contrôler qui accède à notre service, et de quelle manière. En ce qui concerne IArgus, des système d'authentification, de cryptage des communications et de validation des données fournies sont notamment mis en place
-        \item les API web telles que celle utilisée dans ce projet permettent de standardiser les communications avec l'API. Dans la mesure où toutes les requêtes à l'API sont réalisées selon le protocole HTTP, il devient possible d'intégrer rapidement les fonctionnalités de l'API à d'autres projets en cas de besoin
+        \item offrir une fonctionnalité via une API permet de contrôler qui accède à notre service, et de quelle manière. En ce qui concerne IArgus, des système d'authentification, de cryptage des communications et de validation des données fournies sont mis en place
+        \item les API web telles que celle utilisée dans ce projet permettent de standardiser les communications avec l'API. Dans la mesure où toutes les requêtes à l'API sont réalisées selon le protocole HTTPS, il devient possible d'intégrer rapidement les fonctionnalités de l'API à d'autres projets en cas de besoin
         \item il existe plusieurs outils et frameworks qui permettent de mettre en place rapidement des API. 
     \end{itemize}
-    Une API web accepte des requêtes via plusieurs \textbf{endpoints} ("points de terminaison" en français). Chaque endpoint peut accepter une ou plusieurs méthodes de requêtes HTTP. Voici les points de terminaison utilisés par l'API d'IArgus :
+    Une API web accepte des requêtes via plusieurs \textbf{endpoints} ("points de terminaison" en français). Chaque endpoint peut accepter une ou plusieurs méthodes de requêtes HTTPS. Voici les points de terminaison utilisés par l'API d'IArgus :
     \begin{itemize}
         \item / (racine de l'API) : ce endpoint renvoie un message d'aide qui explique comment utiliser l'API. Il accepte la méthode GET
         \item /predict : permet de demander à l'IA une estimation de prix à partir des informations envoyées avec la requête. Ce endpoint accepte les requêtes POST.
@@ -196,18 +219,18 @@
 
     Enfin, notre API réalise une validation des données qu'elle reçoit. Autrement dit, des mécanismes ont été mis en place pour s'assurer que les informations envoyées par l'utilisateur sont bien conformes à ce qui est attendu. Pour le endpoint /predict, par exemple, cela consiste à s'assurer que le nom de l'état est bien une chaîne de caractères, l'année un entier, etc... Ceci nous permet de nous assurer qu'un utilisateur distrait ou mal intentionné ne peut pas faire bugger notre système en envoyant le mauvais type de données.
 
-    L'API a été développée en Python avec le framework FastAPI. FastAPI permet de développer des API web rapidement, en minimisant les temps de calcul nécessaires pour l'API. De plus, FastAPI offre des fonctionnalités qui permettent de rapidement mettre en place des mécanismes tels que la limitation du nombre de requêtes ou la validation des données entrantes.
+    L'API a été développée en Python avec le framework FastAPI. FastAPI est conçu pour développer rapidement des API web performantes. De plus, FastAPI offre des fonctionnalités qui permettent de rapidement mettre en place des mécanismes tels que la limitation du nombre de requêtes ou la validation des données entrantes.
 
     \subsection{Suivi du modèle}
 
     Le suivi du modèle englobe les composants qui nous permettent de visualiser les performances du modèle au cours du temps et d'envoyer des alertes si jamais celles-ci passent en-dessous d'un seuil acceptable. 
     
-    Avant de détailler le fonctionnement de ces composants, parlons de la métrique utilisée pour évaluer les performances de notre modèle. Lors de la présentation des exigences du client[INSÉRER LIEN], nous avons vu que ce dernier souhaitait garantir que les prix prédits se situaient en moyenne dans un intervalle de 20\% autour des prix réels. Ce critère de performances correspond à \textbf{l'erreur absolue moyenne en pourcentage}, souvent appelée \textbf{MAPE} pour "Mean Absolute Percentage Error". Cette métrique nous indique le pourcentage moyen d'erreur d'un modèle par rapport aux valeurs réelles, ce qui correspond bien à ce que nous demande notre client. Par conséquent, \textbf{la MAPE sera utilisée comme métrique de référence dans la suite de ce dossier.} On considèrera ainsi qu'une MAPE de 0.2 (soit 20\% d'erreur) resprésente le seuil de performances à ne pas dépasser. Un modèle qui a une MAPE supérieure à ce seuil devra donc être \textbf{réentraîné}.
+    Avant de détailler le fonctionnement de ces composants, parlons de la métrique utilisée pour évaluer les performances de notre modèle. Lors de la présentation des exigences du client, nous avons vu que ce dernier souhaitait garantir que les prix prédits se situaient en moyenne dans un intervalle de 20\% autour des prix réels. Ce critère de performances correspond à \textbf{l'erreur absolue moyenne en pourcentage}, souvent appelée \textbf{MAPE} pour "Mean Absolute Percentage Error". Cette métrique nous indique le pourcentage moyen d'erreur d'un modèle par rapport aux valeurs réelles, ce qui correspond bien à ce que nous demande notre client. Par conséquent, \textbf{la MAPE sera utilisée comme métrique de référence dans la suite de ce dossier.} On considèrera ainsi qu'une MAPE de 20\% resprésente le seuil de performances à ne pas dépasser. Un modèle qui a une MAPE supérieure à ce seuil devra donc être \textbf{réentraîné}.
 
     \begin{figure}[h!]
-        \begin{equation}MAPE = \frac {\sum \frac{\lvert A-F \rvert}{A} \times 100}{N}  \end{equation}
+        \begin{equation}MAPE = \frac {\sum \frac{\lvert A-P \rvert}{A} \times 100}{N}  \end{equation}
         \centering
-        \caption{Définition de la MAPE. Ici $N$ représente le nombre total de prédictions réalisées, $A$ est la valeur réelle du prix, et $F$ la valeur prédite par le modèle d'IA}
+        \caption{Définition de la MAPE. Ici $N$ représente le nombre total de prédictions réalisées, $A$ est la valeur réelle du prix, et $P$ la valeur prédite par le modèle d'IA}
         \centering
     \end{figure}
 
@@ -219,23 +242,37 @@
     \end{itemize}
 
 
-    Lors de son exécution, le script de monitorage commence par collecter les données depuis la base de données MySQL. Celles-ci sont stockées dans une table car\_details qui recense également la data d'ajout de chaque transaction dans la base de données. Cette information est essentielle car c'est elle qui permet au script de savoir quelles données utiliser pour tester le modèle. En effet, seules les données ajoutées à la base de données après le dernier entraînement du modèle sont utilisées. L'intérêt est de vérifier que le modèle reste performant même avec des données qu'il n'a jamais vues et d'éviter le \textbf{concept drift}. Le concept drift est un phénomène de dégradation des performances d'un modèle lorsqu'il est confronté à des données statistiquement différentes de celles avec lesquelles il a été entraîné. 
+    Lors de son exécution, le script de monitorage commence par collecter les données depuis la base de données MySQL. Celles-ci sont stockées dans une table car\_details qui recense également la date d'ajout de chaque transaction dans la base de données. Cette information est essentielle car c'est elle qui permet au script de savoir quelles données utiliser pour tester le modèle. En effet, seules les données ajoutées à la base de données après le dernier entraînement du modèle sont utilisées. L'intérêt est de vérifier que le modèle reste performant même avec des données qu'il n'a jamais vues et d'éviter le \textbf{concept drift}. Le concept drift est un phénomène de dégradation des performances d'un modèle lorsque la relation entre les variables d'entrée et de sortie d'un modèle a changé depuis que celui-ci a été entraîné. 
     
     Nous pouvons donner un exemple concret applicable à notre cas : imaginons qu'une ou plusieurs marques de voiture présentes dans le jeu de données d'entraînement aient subi des crises après l'entraînement du modèle (accidents graves impliquant leurs véhicules, scandales, chute de la demande dans le secteur automobile...). Ces événements sont susceptibles d'influencer les prix de vente des voitures d'occasion. Cependant, notre modèle a été entraîné avant ces événements. Ses prédictions n'en tiennent donc pas compte, et cela peut affecter ses performances. Cet exemple est une illustration du concept drift : \textbf{les relations entre les différentes variables ont changé}.
 
-    [DIAGRAMME DE FLUX POUR MONTRER LE FONCTIONNEMENT DU SCRIPT]
+    
 
-    Dans le cas où la MAPE du modèle serait supérieure à 0,2, le script lance un réentraînement du modèle en utilisant cette fois toutes les données disponibles, anciennes comme nouvelles. Une fois ceci fait, la MAPE du modèle nouvellement réentraîné est calculé. Deux cas de figure sont ensuite possibles :
+    Dans le cas où la MAPE du modèle serait supérieure à 20\%, le script lance un réentraînement du modèle en utilisant cette fois toutes les données disponibles, anciennes comme nouvelles. Une fois ceci fait, la MAPE du modèle nouvellement réentraîné est calculé. Deux cas de figure sont ensuite possibles :
     \begin{itemize}
         \item la MAPE est repassée sous 20\% et le script termine son exécution
         \item la MAPE reste supérieure au seuil de 20\% malgré le réentraînement du modèle. Dans cette situation, une intervention humaine est nécessaire pour résoudre le problème, et le script va donc automatiquement alerter l'équipe technique d'IArgus.
     \end{itemize}
 
-    [SCREENSHOT QUI MONTRE LE MAIL D'ALERTE REÇU]
+    \begin{figure}[h!]
+        \includegraphics[width=15cm]{monitoring}
+        \centering
+        \caption{Fonctionnement du script de monitoring.}
+    \end{figure}
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{mail}
+        \centering
+        \caption{Un serveur SMTP est nécessaire pour envoyer automatiquement un e-mail. Ici, un exemple d'e-mail envoyé en utilisant le serveur de GMail.}
+    \end{figure}
 
     Dans le deuxième cas, l'alerte est lancée via un e-mail envoyé automatiquement par le script de monitorage. Pour cela, le script passe par un serveur SMTP, dont l'URL et le port à utiliser sont paramétrables dans un fichier de configuration YAML. Il est possible d'utiliser un serveur SMTP comme celui de GMail, ou de coder le sien. Le serveur de GMail a été utilisé pour réaliser les tests nécessaires à l'élaboration de ce dossier.
 
-    [SCREENSHOT DE MLflow]
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{mlflow}
+        \centering
+        \caption{MLflow permet de visualiser les performances du modèle en temps réel. Ce graphique montre l'évolution de la MAPE pendant un entraînement.}
+    \end{figure}
 
     MLflow est utilisé afin de pouvoir suivre le modèle. MLflow permet à l'équipe technique d'IArgus de suivre les performances du modèle dans ses différentes versions, facilitant ainsi la résolution de problèmes de performances éventuels. Le dashboard de MLflow est disponible via un navigateur web et s'exécute en local ou sur un serveur dédié dont l'URL peut être spécifiée dans le fichier de configuration YAML.
     
@@ -256,12 +293,17 @@
         \item exécuter les tests avec pytest.
     \end{itemize}
 
+    Dans le cas où un ou plusieurs de ces tests échouerait au moment où le code d'IArgus est mis à jour sur GitHub, un e-mail est automatiquement envoyé à l'adresse e-mail de la personne qui a réalisé la mise à jour. Cette fonctionnalité nous permet d'être alerté immédiatement si les dernières modifications apportées au code ont malencontreusement introduit des bugs dans IArgus.
 
     \section{Intégration du service dans l'application}
 
-    [PENSER À METTRE UN SCREENSHOT DU RÉSULTAT DE LA PRÉDICTION TEL QU'AFFICHÉ DANS L'APPLICATION WEB]
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{prediction_result}
+        \centering
+        \caption{Une page web a été ajoutée à l'application IArgus pour communiquer l'estimation de prix à l'utilisateur.}
+    \end{figure}
 
-    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API [INSÉRER LIEN VERS LA SECTION], un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur, comme nous pouvons le voir dans la figure n[INSÉRER LIEN FIGURE].
+    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
 
     \section{Packaging et mise en place du modèle}
 
@@ -272,7 +314,9 @@
         \item l'installation de toutes les dépendances nécessaires
     \end{itemize} 
 
-    Le script d'exćecution automatise les tâches suivantes :
+    Si la machine où on installe IArgus est équipée d'un GPU et qu'on souhaite que le réseau de neurones l'utilise pour faire ses calculs, il est également nécessaire d'installer CUDA. CUDA est une technologie créée par Nvidia pour les cartes graphiques de la marque afin d'utiliser le GPU d'une machine pour réaliser des tâches normalement assurées par le processeur, ce qui peut permettre d'accélérer significativement les calculs. Dans la mesure où la procédure d'installation peut être lourde et dépend du modèle de la carte graphique, cette installation n'est pas comprise dans le script. L'installation de CUDA est malgré tout recommandée pour accélérer la vitesse de calcul du réseau neuronal. CUDA est disponible sur \href{https://developer.nvidia.com/cuda-downloads}{le site de Nvidia}.
+
+    Le script d'exécution automatise les tâches suivantes :
     \begin{itemize}
         \item exécution d'un serveur MLflow en local (si l'utilisateur n'utilise pas de serveur dédié)
         \item connexion au serveur MySQL spécifié par l'utilisateur, et création d'une base de données pour IArgus si elle n'existe pas déjà
