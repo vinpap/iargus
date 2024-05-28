@@ -156,8 +156,8 @@
         \caption{Tableau kanban du projet. On remarque que des limites sont imposées au nombre de tâches non commencées ou en cours.}
         \centering
     \end{figure}
-    
-    \section{Architecture du projet}
+
+    \section{Architecture générale du projet}
     Le service d'IA est constitué de plusieurs composants :
     \begin{itemize}
         \item un modèle d'intelligence artificielle entraîné avec les données fournies par l'Argus. Il prédit ensuite une estimation de prix en fonction des données entrées par l'utilisateur.
@@ -174,6 +174,7 @@
         \centering
     \end{figure}
 
+    \section{L'API}
     \subsection{Le modèle d'intelligence artificielle}
     Le modèle d'intelligence artificielle utilisé pour réaliser les estimations de prix est un \textbf{Deep Neural Network} (abrégé DNN), ou \textbf{Réseau Neuronal Profond} en français. Un réseau neuronal est un type de modèle d'intelligence artificielle inspiré par le cerveau humain, plus précisément par les neurones et les connexions synaptiques entre eux. C'est un type de machine learning appelé deep learning qui consiste à utiliser des neurones ou nodes interconnectés, organisés en plusieurs couches. Ce modèle a été choisi suite à la réalisation d'un processus de benchmarking qui a opposé le DNN à plusieurs autres modèles tels que SGD et SVR.
 
@@ -197,7 +198,10 @@
     La ville où se déroule la vente de voiture n'est pas non plus utilisée par notre modèle. Dans ce cas, ce choix est fait dans un souci de performances. En effet, un DNN ne peut traiter que des données numériques : les informations telles que la marque de la voiture, son modèle, la ville ou l'état de la transaction doivent être \textbf{encodées} pour être exploitables par le modèle d'IA. Ceci est accompli grâce à la technique du \textbf{One-Hot Encoding}, qui consiste à convertir des valeurs discrètes (un nom de marque, par exemple) en vecteurs constitués de 1 et de 0 uniquement. Or, la taille de ce vecteur dépend du nombre de valeurs uniques présentes dans nos données pour chaque variable (56 dans le cas de l'état, par exemple). Utiliser cette technique pour convertir le nom de la ville en nombres génèrerait des vecteurs à plusieurs milliers de dimensions, ce qui augmenterait considérablement les besoins en terme de mémoire vive et de puissance de calcul. Toutes ces raisons expliquent pourquoi la ville de vente a été mise de côté.
     
     Une fois que notre DNN est entraîné avec les données fournies par l'Argus, il devient possible de l'utiliser pour estimer des prix de vente. Cependant, l'application n'interagit pas directement avec le modèle. À la place elle envoie des requêtes à un composant qui fait office d'intermédiaire, \textbf{l'API}.
-    \subsection{l'API}
+
+
+    \subsection{Implémentation de l'API}
+
     L'accès au modèle est contrôlé par une API (\textbf{Application Programming Interface}). Une API sert de façade à un ensemble de fonctionnalités : elle permet à un tiers d'utiliser ces fonctionnalités sans avoir besoin de connaître leur fonctionnement interne. Dans notre cas, notre API permet à des tiers (l'application IArgus, les techniciens de l'équipe de développement) d'utiliser notre modèle d'IA sans connaître les rouages de son fonctionnement.
 
     Utiliser une API pour donner accès à un service confère plusieurs avantages :
@@ -221,7 +225,17 @@
 
     L'API a été développée en Python avec le framework FastAPI. FastAPI est conçu pour développer rapidement des API web performantes. De plus, FastAPI offre des fonctionnalités qui permettent de rapidement mettre en place des mécanismes tels que la limitation du nombre de requêtes ou la validation des données entrantes.
 
-    \subsection{Suivi du modèle}
+    \subsection{Intégration à l'application existante}
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{prediction_result}
+        \centering
+        \caption{Une page web a été ajoutée à l'application IArgus pour communiquer l'estimation de prix à l'utilisateur.}
+    \end{figure}
+
+    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
+
+    \section{Monitorage du modèle}
 
     Le suivi du modèle englobe les composants qui nous permettent de visualiser les performances du modèle au cours du temps et d'envoyer des alertes si jamais celles-ci passent en-dessous d'un seuil acceptable. 
     
@@ -275,9 +289,8 @@
     \end{figure}
 
     MLflow est utilisé afin de pouvoir suivre le modèle. MLflow permet à l'équipe technique d'IArgus de suivre les performances du modèle dans ses différentes versions, facilitant ainsi la résolution de problèmes de performances éventuels. Le dashboard de MLflow est disponible via un navigateur web et s'exécute en local ou sur un serveur dédié dont l'URL peut être spécifiée dans le fichier de configuration YAML.
-    
 
-    \subsection{Tests et intégration continue}
+    \section{Tests et intégration continue}
 
     Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Ces tests se divisent en deux catégories :
     \begin{itemize}
@@ -295,17 +308,12 @@
 
     Dans le cas où un ou plusieurs de ces tests échouerait au moment où le code d'IArgus est mis à jour sur GitHub, un e-mail est automatiquement envoyé à l'adresse e-mail de la personne qui a réalisé la mise à jour. Cette fonctionnalité nous permet d'être alerté immédiatement si les dernières modifications apportées au code ont malencontreusement introduit des bugs dans IArgus.
 
-    \section{Intégration du service dans l'application}
 
-    \begin{figure}[h!]
-        \includegraphics[width=12cm]{prediction_result}
-        \centering
-        \caption{Une page web a été ajoutée à l'application IArgus pour communiquer l'estimation de prix à l'utilisateur.}
-    \end{figure}
+    \section{Livraison continue}
+    
+    
 
-    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
-
-    \section{Packaging et mise en place du modèle}
+    \section{Mise en place de IArgus}
 
     Comme nous l'avons vu, IArgus est constitué de plusieurs composants qui interagissent entre eux : l'API, le serveur MLflow, une base de données MySQL... Il était donc important d'automatiser au maximum l'installation, la configuration et la lancement du projet pour simplifier la tâche des équipes techniques qui devront mettre en place IArgus. Dans ce but, deux scripts exécutables avec \textbf{Bash} sont fournis pour respectivement installer et exécuter IArgus sur une machine Linux où Python 3 est installé. Le script d'installation réalise les tâches suivantes pour l'utilisateur qui souhaite installer IArgus :
     \begin{itemize}

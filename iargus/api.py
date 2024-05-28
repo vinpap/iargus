@@ -35,6 +35,7 @@ class CarDetails(BaseModel):
     model: str
     year: int
     mileage: float
+    security_token: str
 
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
@@ -63,7 +64,7 @@ async def startup():
 
 
 @app.get("/")
-async def root():
+async def root(security_token: str):
     """
     Returns a help message.
     """

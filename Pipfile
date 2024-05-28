@@ -14,6 +14,7 @@ pydantic = "==2.6.4"
 requests = "==2.31.0"
 mysql-connector-python = "*"
 httpx = "*"
+slowapi = "*"
 
 [dev-packages]
 
