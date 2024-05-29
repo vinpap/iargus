@@ -1,4 +1,5 @@
 fastapi
+gunicorn
 mlflow
 mysql-connector-python
 numpy
@@ -10,5 +11,5 @@ PyYAML
 scikit_learn
 slowapi
 tensorflow
-uvicorn
+
 
