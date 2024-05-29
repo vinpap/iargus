@@ -9,4 +9,5 @@ python_dateutil
 PyYAML
 scikit_learn
 slowapi
+tensorflow
 
