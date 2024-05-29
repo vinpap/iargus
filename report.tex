@@ -325,10 +325,15 @@
 
     \section{Tests et intégration continue}
 
-    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier {https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}Ces tests se divisent en deux catégories :
+    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier \href{https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}Ces tests se divisent en deux catégories :
     \begin{itemize}
         \item les tests unitaires qui vérifient le bon fonctionnement des différentes fonctions du script de monitorage
         \item les tests de points de terminaison codés grâce aux fonctionnalités de test proposées par FastAPI. Ces tests simulent l'envoi de requêtes aux différents points de terminaison de l'API et vérifient que les données renvoyées par l'API sont conformes à celles que l'on attend.
+    \end{itemize}
+
+    Les tests du monitorage couvrent les situations suivantes :
+    \begin{itemize}
+        \item {A ECRIRE}
     \end{itemize}
 
     Les tests de l'API couvrent tous les endpoints et vérifient les cas suivants :
@@ -342,7 +347,7 @@
         \item pour /get\_token : on s'assure qu'aucun token n'est renvoyé si l'adresse e-mail fournie ne respecte pas le bon format.
     \end{itemize}
 
-    Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans un fichier de configuration YAML lu automatiquement par la machine virtuelle qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
+    Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans le fichier de configuration \href{https://github.com/vinpap/iargus/blob/fea8247513304d645d6cb4ff5857fe8951ff95e0/.github/workflows/master_vincent-iargus.yml}{master\_vincent-iargus.yml} lu automatiquement par la machine virtuelle qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
     \begin{itemize}
         \item installer toutes les dépendances du projet dans un environnement virtuel avec pipenv
         \item lancer MLflow sur l'hôte local
@@ -350,11 +355,24 @@
         \item exécuter les tests avec pytest.
     \end{itemize}
 
+    Ces actions sont automatiquement effectuées lorsque du code est poussé ou fusionné sur la branche master (avec une \textit{pull request}).
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{gh_action}
+        \centering
+        \caption{Une capture d'écran de l'interface de GitHub Action. Ici on constate que toutes les étapes de test et de déploiement d'IArgus ont réussi. La ligne en bas de l'écran indique les résultats du test.}
+    \end{figure}
+
     Dans le cas où un ou plusieurs de ces tests échouerait au moment où le code d'IArgus est mis à jour sur GitHub, un e-mail est automatiquement envoyé à l'adresse e-mail de la personne qui a réalisé la mise à jour. Cette fonctionnalité nous permet d'être alerté immédiatement si les dernières modifications apportées au code ont malencontreusement introduit des bugs dans IArgus.
 
 
     \section{Livraison continue}
     
+    Comme on peut le constater dans la capture d'écran ci-dessus, GitHub Action n'est pas uniquement utile pour l'automatisation de tests. Ici, nous nous en servons également pour déployer automatiquement l'API sur Microsoft Azure. Dans les faits, les actions suivantes sont effectués lorsque du code est poussé ou fusionné sur la branche master :
+    \begin{itemize}
+        \item comme nous venons de le voir, les tests de l'API et du monitorage sont exécutés
+        \item en parallèle, le code est déployé sur Microsoft Azure, qui installe les dépendances nécessaires et lance l'application en utilisant la commande de démarrage spécifiée dans les paramètres de notre application sur la ressource Azure.
+    \end{itemize}
     
 
     \section{Mise en place de IArgus} \label{mise_en_place}
