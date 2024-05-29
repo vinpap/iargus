@@ -30,7 +30,7 @@ def test_predict():
         "email": "test@mail.com"
     }
     token_response = client.post("/get_token", json=test_user_details)
-    token = response.json()["token"]
+    token = token_response.json()["token"]
     testing_json["security_token"] = token
 
     response = client.post("/predict", json=testing_json)
