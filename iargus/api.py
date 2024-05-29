@@ -204,7 +204,7 @@ async def predict(request: Request, car_details: CarDetails):
         return {"message": message}
 
     # Loading the model from MLflow
-    client = MlflowClient()
+    client = MlflowClient(tracking_uri=os.environ["MLFLOW_HOST"])
     model_versions = client.search_model_versions(f"name='iargus'")
     if len(model_versions) == 0:
         message = "No model has been trained yet for IArgus. Please try again later."

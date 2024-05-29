@@ -117,11 +117,14 @@
     \subsection{L'application de départ}
     Dans l'optique d'accueillir ce nouveau service, les développeurs web embauchés par l'Argus ont créé un site web qui comporte un formulaire permettant aux utilisateurs d'entrer les caractéristiques d'une voiture. C'est là que nous intervenons : nos clients de l'Argus souhaitent que la validation de ce formulaire envoie une requête à une intelligence artificielle qui estimera le meilleur prix de vente pour la voiture de l'utilisateur.
     \begin{figure}[h!]
-        \includegraphics[width=12cm]{form}
+        \includegraphics[width=12cm]{base_app}
         \centering
         \caption{Disponible sur la page d'accueil du site, ce formulaire permet à l'utilisateur d'entrer les caractéristiques de sa voiture pour obtenir une estimation de son prix.}
         \centering
     \end{figure}
+
+    Cette application est déployée et disponible sur Microsoft Azure à cette adresse : \href{https://iargus-base-app.azurewebsites.net/}{https://iargus-base-app.azurewebsites.net/}.
+
     \subsection{Les données disponibles}
     Pour nous permettre de mener notre mission à bien, l'Argus met à notre disposition un jeu de données qui recense plus de 800 000 ventes de voitures d'occasion. Pour chaque transaction sont indiqués :
     \begin{itemize}
@@ -161,10 +164,10 @@
     Le service d'IA est constitué de plusieurs composants :
     \begin{itemize}
         \item un modèle d'intelligence artificielle entraîné avec les données fournies par l'Argus. Il prédit ensuite une estimation de prix en fonction des données entrées par l'utilisateur.
-        \item une API qui expose ce modèle. C'est le seul composant qui interagit avec l'application web IArgus. Lorsque l'utilisateur soumet un formulaire avec les informations de son véhicule, celles-ci sont automatiquement transmises de façon sécurisée à l'API via une requête HTTP. L'API communique ensuite avec le modèle pour obtenir une estimation de prix et renvoie le résultat à l'application, qui peut l'afficher pour l'utilisateur. 
-        \item un dashboard qui permet aux techniciens de l'équipe informatique de visualiser l'évolution des performances du modèle et de voir l'historique des entraînements et tests réalisés
-        \item un script de monitoring. Exécuté une fois par mois pour tenir compte des nouvelles données reçues, il teste le modèle avec les nouvelles données et lance un nouvel entraînement si ses performances se sont trop dégradées (i.e. si l'erreur moyenne du modèle a dépassé 20\%). Dans le cas où l'erreur resterait malgré tout trop élevée après cela, le script envoie une alerte par e-mail à l'équipe technique.
-        \item une base de données MySQL qui stocke toutes les données utilisées par le modèle. Les nouvelles données reçues chaque mois par l'Argus y sont automatiquement ajoutées.
+        \item une API qui expose ce modèle. C'est le seul composant qui interagit avec l'application web IArgus. Lorsque l'utilisateur soumet un formulaire avec les informations de son véhicule, celles-ci sont automatiquement transmises de façon sécurisée à l'API via une requête HTTP. L'API communique ensuite avec le modèle pour obtenir une estimation de prix et renvoie le résultat à l'application, qui peut l'afficher pour l'utilisateur. Pour les besoins de ce dossier, nous avons déployé cette API sur \textbf{Microsoft Azure} à l'adresse suivante : \href{https://vincent-iargus.azurewebsites.net/}{https://vincent-iargus.azurewebsites.net/} 
+        \item un dashboard qui permet aux techniciens de l'équipe informatique de visualiser l'évolution des performances du modèle et de voir l'historique des entraînements et tests réalisés. Ce dashboard a été déployé localement dans le cadre de ce dossier, mais il est aussi possible de le déployer à l'aide d'outils tels que Microsoft Azure
+        \item un script de monitoring. Exécuté une fois par mois pour tenir compte des nouvelles données reçues, il teste le modèle avec les nouvelles données et lance un nouvel entraînement si ses performances se sont trop dégradées (i.e. si l'erreur moyenne du modèle a dépassé 20\%). Dans le cas où l'erreur resterait malgré tout trop élevée après cela, le script envoie une alerte par e-mail à l'équipe technique. Ce script est déployé et automatiquement exécuté sur \href{https://www.pythonanywhere.com/}{PythonAnywhere}
+        \item une base de données MySQL qui stocke toutes les données utilisées par le modèle. Les nouvelles données reçues chaque mois par l'Argus y sont automatiquement ajoutées. Pour notre projet, nous avons déployé cette base de données sur Microsoft Azure.
     \end{itemize}
 
     \begin{figure}[h!]

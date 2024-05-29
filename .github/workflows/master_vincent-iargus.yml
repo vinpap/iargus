@@ -17,6 +17,7 @@ env:
   MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
   MYSQL_PWD: ${{ secrets.MYSQL_PWD }}
   MYSQL_USER: ${{ secrets.MYSQL_USER }}
+  MLFLOW_HOST: ${{ secrets.MLFLOW_HOST }}
 
 jobs:
   test:

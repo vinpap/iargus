@@ -22,7 +22,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.callbacks import EarlyStopping
 
 
-mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+mlflow.set_tracking_uri(uri=os.environ["MLFLOW_HOST"])
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', filename='monitoring.log', level=logging.INFO)
 logger = logging.getLogger()
 
