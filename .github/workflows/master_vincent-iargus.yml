@@ -48,8 +48,8 @@ jobs:
         # Run the tests
       - name: Run tests
         run: |
-          pipenv run mlflow server --host 127.0.0.1 --port 8080 & pipenv run python iargus/setup_tests.py
           cd iargus
+          pipenv run mlflow server --host 127.0.0.1 --port 8080 & pipenv run python setup_tests.py
           pipenv run python -m pytest
   build:
     runs-on: ubuntu-latest
