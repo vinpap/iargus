@@ -202,6 +202,8 @@
 
     \subsection{Implémentation de l'API}
 
+    \textbf{Remarque} : l'API présentée ici est implémentée dans le fichier \href{https://github.com/vinpap/iargus/blob/08493c829a37590847164a2f695db763736b9e35/iargus/api.py}{api.py}, dans le dossier iargus du dépôt.
+
     L'accès au modèle est contrôlé par une API (\textbf{Application Programming Interface}). Une API sert de façade à un ensemble de fonctionnalités : elle permet à un tiers d'utiliser ces fonctionnalités sans avoir besoin de connaître leur fonctionnement interne. Dans notre cas, notre API permet à des tiers (l'application IArgus, les techniciens de l'équipe de développement) d'utiliser notre modèle d'IA sans connaître les rouages de son fonctionnement.
 
     Utiliser une API pour donner accès à un service confère plusieurs avantages :
@@ -214,8 +216,39 @@
     \begin{itemize}
         \item / (racine de l'API) : ce endpoint renvoie un message d'aide qui explique comment utiliser l'API. Il accepte la méthode GET
         \item /predict : permet de demander à l'IA une estimation de prix à partir des informations envoyées avec la requête. Ce endpoint accepte les requêtes POST.
+        \item /get\_token : ce endpoint permet à un utilisateur d'obtenir un token de sécurité qui lui permettra d'utiliser l'API. Ce mécanisme de sécurité est présenté juste après.
     \end{itemize}
-    Afin de répondre aux exigences du client concernant la sécurisation de l'accès au modèle, plusieurs mécanismes de sécurité ont été implémentés pour réguler l'accès au modèle et protéger l'API des cyberattaques. Le premier de ces mécanismes est la création d'un mécanisme d'authentification via un token secret. Selon cette mécanique, les utilisateurs qui font une requête à l'API doivent y joindre une clé secrète transmise uniquement aux utilisateurs autorisés (pour plus de sécurité, cette clé est automatiquement renouvelée à intervalles réguliers). Les requêtes sans clé valide sont refusées par l'API, ce qui permet d'éviter que des utilisateurs extérieurs à l'entreprise ou des pirates informatiques n'utilisent l'API sans permission.
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{api_endpoints}
+        \centering
+        \caption{Liste des endpoints implémentés dans notre API avec les méthodes HTTP qu'ils acceptent. Les schémas de données "CarDetails" et "UserDetails" présentés en bas de la page détaillent les données qui doivent être envoyées avec les requêtes à /predict et /get\_token, respectivement}
+        \centering
+    \end{figure}
+    Afin de répondre aux exigences du client concernant la sécurisation de l'accès au modèle, plusieurs mécanismes de sécurité ont été implémentés pour réguler l'accès au modèle et protéger l'API des cyberattaques. 
+    
+    Le premier de ces mécanismes est la création d'un mécanisme d'authentification via un token secret propre à chaque utilisateur. Pour pouvoir utiliser l'API, un utilisateur doit préalablement obtenir un token secret généré aléatoirement. Ce token est généré en envoyant une requête POST au endpoint /get\_token, et doit ensuite être envoyé avec chaque requête aux endpoints / et /predict. \textbf{Le token obtenu n'est valide que pendant 180 jours}. Passé ce délai, l'utilisateur devra en demander un nouveau.
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{api_1}
+        \centering
+        \caption{Exemple de requête envoyée sans token valide à /predict. Le endpoint renvoit un message d'erreur dans ce cas-là}
+        \centering
+    \end{figure}
+
+    Pour pouvoir obtenir un token, l'utilisateur doit envoyer avec sa requête à /get\_token son nom, son prénom ainsi que son adresse e-mail. Ces informations sont insérées dans une base de données MySQL avec le token généré ainsi que sa date de création. Cette date est utilisée pour vérifier qu'un token n'a pas expiré.
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{db_tokens}
+        \centering
+        \caption{Les tokens sont stockés dans la table "tokens" d'une base de données MySQL}
+        \centering
+    \end{figure}
+
+    Les requêtes sans clé valide sont refusées par l'API, ce qui permet d'éviter que des utilisateurs extérieurs à l'entreprise ou des pirates informatiques n'utilisent l'API sans permission.
+
+    Il est important de mentionner que cette mesure \textbf{ne suffit pas, à elle seule, à empêcher des personnes non autorisées à accéder à l'API.} En effet, n'importe qui peut accéder au endpoint /get\_token. Cependant, le token qui a été envoyé avec une requête peut permettre d'identifier la personne à l'origine de cette requête, ce qui peut notamment être intéressant dans une organisation. Pour véritablement empêcher des personnes non autorisées à accéder à l'API, une solution est de \textbf{tenir une "whitelist" d'adresses IP autorisées à faire des requêtes à l'API}. C'est une solution mise en place dans le cadre de ce projet qui sera détaillée dans la section \ref{mise_en_place}.
+
 
     Un autre mécanisme de sécurité implémenté est la limitation du nombre de requêtes qu'un utilisateur peut envoyer à l'API dans un court laps de temps. Cela nous permet de protéger notre système des attaques par déni de service, qui consistent à effectuer un grand nombre de requêtes à une URL en un temps très court afin de submerger les capacités du serveur et de le rendre hors service. Dans notre cas, cette protection est d'autant plus importante que notre modèle d'IA consomme beaucoup de mémoire et de ressources de calcul. Ainsi, un grand nombre de requêtes simultanées à /predict pourrait rapidement submerger le serveur où notre IA est déployée.
 
@@ -292,10 +325,21 @@
 
     \section{Tests et intégration continue}
 
-    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Ces tests se divisent en deux catégories :
+    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier {https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}Ces tests se divisent en deux catégories :
     \begin{itemize}
         \item les tests unitaires qui vérifient le bon fonctionnement des différentes fonctions du script de monitorage
         \item les tests de points de terminaison codés grâce aux fonctionnalités de test proposées par FastAPI. Ces tests simulent l'envoi de requêtes aux différents points de terminaison de l'API et vérifient que les données renvoyées par l'API sont conformes à celles que l'on attend.
+    \end{itemize}
+
+    Les tests de l'API couvrent tous les endpoints et vérifient les cas suivants :
+    \begin{itemize}
+        \item pour la racine / : on vérifie que la requête renvoit un code de réponse 200 et que le JSON renvoyé contient bien un message à l'attention de l'utilisateur
+        \item pour /predict : on vérifie que :
+        \begin{itemize}
+            \item si on n'envoit pas de token valide avec la requête, aucune prédiction n'est réalisée
+            \item si on envoit un token valide, une prédiction est réalisée et un float renvoyé
+        \end{itemize}
+        \item pour /get\_token : on s'assure qu'aucun token n'est renvoyé si l'adresse e-mail fournie ne respecte pas le bon format.
     \end{itemize}
 
     Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans un fichier de configuration YAML lu automatiquement par la machine virtuelle qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
@@ -313,7 +357,10 @@
     
     
 
-    \section{Mise en place de IArgus}
+    \section{Mise en place de IArgus} \label{mise_en_place}
+
+    [REFAIRE TOUTE CETTE SECTION]
+    [Plus de script d'installation, détailler toutes les étapes avec déploiement sur Azure]
 
     Comme nous l'avons vu, IArgus est constitué de plusieurs composants qui interagissent entre eux : l'API, le serveur MLflow, une base de données MySQL... Il était donc important d'automatiser au maximum l'installation, la configuration et la lancement du projet pour simplifier la tâche des équipes techniques qui devront mettre en place IArgus. Dans ce but, deux scripts exécutables avec \textbf{Bash} sont fournis pour respectivement installer et exécuter IArgus sur une machine Linux où Python 3 est installé. Le script d'installation réalise les tâches suivantes pour l'utilisateur qui souhaite installer IArgus :
     \begin{itemize}

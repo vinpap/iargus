@@ -38,10 +38,10 @@ def get_data(most_recent_only: bool=False, last_training_date=date.today()):
     logger.info("Retrieving data from database")
     # MYSQL username, password and database name need to be set as environment variables
     with mysql.connector.connect(
-        host="localhost",
+        host=os.environ["MYSQL_HOST"],
         user=os.environ["MYSQL_USER"],
         password=os.environ["MYSQL_PWD"],
-        database=os.environ["MYSQL_DB_NAME"],
+        database="iargus",
     ) as db:
         with db.cursor() as c:
             if most_recent_only:
