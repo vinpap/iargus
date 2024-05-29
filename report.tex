@@ -284,13 +284,16 @@
         \centering
     \end{figure}
 
-    Le suivi du modèle est assuré par trois composants de notre projet :
+    Le monitorage du modèle est assuré par trois composants de notre projet :
     \begin{itemize}
+        \item un script de monitorage exécuté automatiquement à intervalles réguliers qui teste le modèle, le réentraîne si besoin et envoie des alertes par e-mail en cas de problème
         \item un dashboard généré par MLflow, hébergé sur un serveur local
-        \item un script exécuté automatiquement à intervalles réguliers qui teste le modèle, le réentraîne si besoin et envoie des alertes par e-mail en cas de problème
         \item la base de données MySQL qui contient toutes les informations concernant les ventes de voitures d'occasion, continuellement alimentée par l'Argus.
     \end{itemize}
 
+    \subsection{Le script de monitorage}
+
+    Le script de monitorage est \href{https://github.com/vinpap/iargus/blob/981ff9fa80fa4b729df37a93b5966d41e86d6966/iargus/model_monitoring.py}{model\_monitoring.py}. Dans le cadre de ce dossier, il a été déployé sur \href{https://www.pythonanywhere.com/}{PythonAnywhere} où il est exécuté périodiquement.
 
     Lors de son exécution, le script de monitorage commence par collecter les données depuis la base de données MySQL. Celles-ci sont stockées dans une table car\_details qui recense également la date d'ajout de chaque transaction dans la base de données. Cette information est essentielle car c'est elle qui permet au script de savoir quelles données utiliser pour tester le modèle. En effet, seules les données ajoutées à la base de données après le dernier entraînement du modèle sont utilisées. L'intérêt est de vérifier que le modèle reste performant même avec des données qu'il n'a jamais vues et d'éviter le \textbf{concept drift}. Le concept drift est un phénomène de dégradation des performances d'un modèle lorsque la relation entre les variables d'entrée et de sortie d'un modèle a changé depuis que celui-ci a été entraîné. 
     
@@ -318,13 +321,39 @@
 
     Dans le deuxième cas, l'alerte est lancée via un e-mail envoyé automatiquement par le script de monitorage. Pour cela, le script passe par un serveur SMTP, dont l'URL et le port à utiliser sont paramétrables dans un fichier de configuration YAML. Il est possible d'utiliser un serveur SMTP comme celui de GMail, ou de coder le sien. Le serveur de GMail a été utilisé pour réaliser les tests nécessaires à l'élaboration de ce dossier.
 
+
+    \subsection{le dashboard}
+
     \begin{figure}[h!]
         \includegraphics[width=12cm]{mlflow}
         \centering
         \caption{MLflow permet de visualiser les performances du modèle en temps réel. Ce graphique montre l'évolution de la MAPE pendant un entraînement.}
     \end{figure}
 
-    MLflow est utilisé afin de pouvoir suivre le modèle. MLflow permet à l'équipe technique d'IArgus de suivre les performances du modèle dans ses différentes versions, facilitant ainsi la résolution de problèmes de performances éventuels. Le dashboard de MLflow est disponible via un navigateur web et s'exécute en local ou sur un serveur dédié dont l'URL peut être spécifiée dans le fichier de configuration YAML.
+    MLflow est utilisé afin de pouvoir suivre le modèle. MLflow permet à l'équipe technique d'IArgus de suivre les performances du modèle dans ses différentes versions, facilitant ainsi la résolution de problèmes de performances éventuels. Le dashboard de MLflow est disponible via un navigateur web et s'exécute en local ou sur un serveur dédié. Nous utilisons MLflow pour notre projet pour sa simplicité d'exécution (une ligne suffit pour lancer un serveur de suivi de modèles) et pour sa facilité d'utilisation (l'interface de Mlflow est très claire et nous permet de trouver facilement les solutions que nous cherchons). Dans la mesure où nous ne savons pas si les techniciens de notre client ont des compétences poussées en intelligence artificielle, il paraît intéressant de leur fournir une interface simple.
+
+    Dans notre cas, nous exécutons MLFlow sur un serveur local rendu public grâce à cette commande :
+    \begin{verbatim}
+        mlflow server --host <adresse e-mail de la machine qui exécute cette commande>
+    \end{verbatim}
+
+    Il est important de noter que le serveur ainsi créé n'est pas sécurisé et reste utilisable par n'importe qui. Deux solutions sont possibles pour pallier à ce problème :
+    \begin{itemize}
+        \item Définir une liste d'adresses IP autorisées sur la machine où MLflow est exécuté, et refuser les requêtes qui ne proviennent pas de ces adresses IP. Cette solution est cependant très rigide, car il faudrait ajouter une adresse IP à la liste chaque fois qu'un nouvel utilisateur a besoin du serveur MLflow
+        \item déployer le serveur MLflow en ligne grâce à un service tel que Databricks ou Azure. Cette approche n'a pas été utilisée ici en raison du coût élevé de ces services, mais il s'agirait d'une bonne solution pour déployer MLflow de manière sécurisée.
+    \end{itemize}
+
+    \subsection{La base de données}
+
+    Pour stocker nos données, nous utilisons une base de données MySQL hébergée sur le même serveur que la base de données qui contient les tokens de l'API. Cette base de données contient une seule table, \textit{car\_details}, qui enregistre toutes les ventes de voiture enregistrées aux États-Unis par l'Argus.
+
+    \begin{figure}[h!]
+        \includegraphics[width=12cm]{car_details_table}
+        \centering
+        \caption{En plus des différentes informations concernant les voitures vendues, la table car\_details enregistre aussi la date d'ajout de chaque vente, qui est utilisée par le script de monitorage pour savoir quelles données utiliser lors des tests du modèle}
+    \end{figure}
+
+    
 
     \section{Tests et intégration continue}
 
@@ -336,7 +365,8 @@
 
     Les tests du monitorage couvrent les situations suivantes :
     \begin{itemize}
-        \item {A ECRIRE}
+        \item on vérifie que la conversion des variables catégoriques dans les données (comme la marque des voitures, par exemple) a bien fonctionné, notamment en s'assurant qu'une variable encodée en \textit{one-hot} vector ne compte qu'un seul 1
+        \item on vérifie également que la MAPE calculée par la fonction de test est bien comprise entre 0 et 1.
     \end{itemize}
 
     Les tests de l'API couvrent tous les endpoints et vérifient les cas suivants :
