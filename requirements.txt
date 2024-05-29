@@ -10,4 +10,5 @@ PyYAML
 scikit_learn
 slowapi
 tensorflow
+uvicorn
 
