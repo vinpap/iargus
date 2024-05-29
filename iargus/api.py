@@ -126,7 +126,7 @@ async def startup():
                             password=os.environ["MYSQL_PWD"], 
                             host=os.environ["MYSQL_HOST"], 
                             database="iargus_api")
-
+ 
     
 
     # Loading the SSL certificate and key
