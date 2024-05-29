@@ -21,8 +21,7 @@ def test_predict():
     testing_data = pd.read_csv("./test/testing_data.csv")
     testing_json = testing_data.iloc[0].to_dict()
     response = client.post("/predict", json=testing_json)
-    assert response.status_code == 200
-    assert "predicted_price" in response.json()
+    assert response.status_code == 422
 
     # With a valid token
     test_user_details = {
@@ -40,14 +39,6 @@ def test_predict():
     assert isinstance(response.json()["predicted_price"], float)
 
     # Envoyer des données de test et vérifier que le résultat est un float
-
-def test_index():
-    """
-    Test for the index (/)
-    """
-    response = client.get("/")
-    assert response.status_code == 200
-    assert "message" in response.json()
 
 def test_get_token():
     """

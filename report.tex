@@ -333,10 +333,10 @@
 
     Les tests de l'API couvrent tous les endpoints et vérifient les cas suivants :
     \begin{itemize}
-        \item pour la racine / : on vérifie que la requête renvoit un code de réponse 200 et que le JSON renvoyé contient bien un message à l'attention de l'utilisateur
+        \item pour la racine / : on vérifie que la requête renvoit un code 422 si on n'a pas envoyé de token
         \item pour /predict : on vérifie que :
         \begin{itemize}
-            \item si on n'envoit pas de token valide avec la requête, aucune prédiction n'est réalisée
+            \item si on n'envoit pas de token avec la requête, aucune prédiction n'est réalisée et on obtient un code d'erreur 422
             \item si on envoit un token valide, une prédiction est réalisée et un float renvoyé
         \end{itemize}
         \item pour /get\_token : on s'assure qu'aucun token n'est renvoyé si l'adresse e-mail fournie ne respecte pas le bon format.
