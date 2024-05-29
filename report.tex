@@ -271,6 +271,14 @@
 
     Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
 
+    Le token de l'API est stocké dans une variable d'environnement sur le serveur qui exécute l'application. Cependant, il faut également prévoir les cas suivants :
+    \begin{itemize}
+        \item aucun token n'est défini
+        \item un token est défini, mais il a expiré.
+    \end{itemize}
+
+    Lorsqu'un utilisateur valide le formulaire avec les informations de sa voiture, une vérification est effectuée pour vérifier ces deux conditions. Si l'application n'a effectivement pas de token valide, elle envoit alors automatiquement une requête au endpoint /get\_token de l'API, en lui donnant pour identifiants les nom, prénom et adresse e-mail de l'administrateur qui sont stockés dans le fichier de configuration de l'application \href{https://github.com/vinpap/iargus_app/blob/386366798c97bc3b68ac874ca10d640cb5d20902/config.yml}{config.yml}. Le token renvoyé par l'API est alors stocké en variable d'environnement, et une nouvelle requête est envoyée à /predict, cette fois-ci avec le nouveau token.
+
     \section{Monitorage du modèle}
 
     Le suivi du modèle englobe les composants qui nous permettent de visualiser les performances du modèle au cours du temps et d'envoyer des alertes si jamais celles-ci passent en-dessous d'un seuil acceptable. 
