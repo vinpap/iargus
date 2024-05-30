@@ -10,6 +10,8 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{parskip}
+\usepackage{enumitem}
+\setlist{nosep}
 
 \lstset{
     inputencoding = utf8,  % Input encoding
@@ -365,7 +367,7 @@
 
     \section{Tests et intégration continue}
 
-    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier \href{https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}Ces tests se divisent en deux catégories :
+    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier \href{https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}, ces tests se divisent en deux catégories :
     \begin{itemize}
         \item les tests unitaires qui vérifient le bon fonctionnement des différentes fonctions du script de monitorage
         \item les tests de points de terminaison codés grâce aux fonctionnalités de test proposées par FastAPI. Ces tests simulent l'envoi de requêtes aux différents points de terminaison de l'API et vérifient que les données renvoyées par l'API sont conformes à celles que l'on attend.
@@ -373,7 +375,7 @@
 
     Les tests du monitorage couvrent les situations suivantes :
     \begin{itemize}
-        \item on vérifie que la conversion des variables catégoriques dans les données (comme la marque des voitures, par exemple) a bien fonctionné, notamment en s'assurant qu'une variable encodée en \textit{one-hot} vector ne compte qu'un seul 1
+        \item on vérifie que la conversion des variables catégoriques dans les données (comme la marque des voitures, par exemple) a bien fonctionné, notamment en s'assurant qu'une variable encodée en \textit{one-hot} vector ne compte qu'un seul 1 dams le vecteur obtenu
         \item on vérifie également que la MAPE calculée par la fonction de test est bien comprise entre 0 et 1.
     \end{itemize}
 
