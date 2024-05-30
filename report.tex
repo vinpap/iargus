@@ -420,26 +420,15 @@
 
     \section{Mise en place de IArgus} \label{mise_en_place}
 
-    [REFAIRE TOUTE CETTE SECTION]
-    [Plus de script d'installation, détailler toutes les étapes avec déploiement sur Azure]
+    Cette section couvre la mise en place des différents composants d'IArgus. il s'agit de la documentation présentée dans \href{https://github.com/vinpap/iargus/blob/fca4c4c15cce4cdcf9302b8a4ca29ca033c4686a/README.md}{le fichier README} du dépôt.
 
-    Comme nous l'avons vu, IArgus est constitué de plusieurs composants qui interagissent entre eux : l'API, le serveur MLflow, une base de données MySQL... Il était donc important d'automatiser au maximum l'installation, la configuration et la lancement du projet pour simplifier la tâche des équipes techniques qui devront mettre en place IArgus. Dans ce but, deux scripts exécutables avec \textbf{Bash} sont fournis pour respectivement installer et exécuter IArgus sur une machine Linux où Python 3 est installé. Le script d'installation réalise les tâches suivantes pour l'utilisateur qui souhaite installer IArgus :
-    \begin{itemize}
-        \item l'installation de Git
-        \item le clonage du dépôt GitHub où se trouve le code
-        \item l'installation de toutes les dépendances nécessaires
-    \end{itemize} 
+    \subsection{Installation de la base de données}
+    \subsection{Lancement de MLflow}
+    \subsection{Déploiement de l'API}
 
-    Si la machine où on installe IArgus est équipée d'un GPU et qu'on souhaite que le réseau de neurones l'utilise pour faire ses calculs, il est également nécessaire d'installer CUDA. CUDA est une technologie créée par Nvidia pour les cartes graphiques de la marque afin d'utiliser le GPU d'une machine pour réaliser des tâches normalement assurées par le processeur, ce qui peut permettre d'accélérer significativement les calculs. Dans la mesure où la procédure d'installation peut être lourde et dépend du modèle de la carte graphique, cette installation n'est pas comprise dans le script. L'installation de CUDA est malgré tout recommandée pour accélérer la vitesse de calcul du réseau neuronal. CUDA est disponible sur \href{https://developer.nvidia.com/cuda-downloads}{le site de Nvidia}.
 
-    Le script d'exécution automatise les tâches suivantes :
-    \begin{itemize}
-        \item exécution d'un serveur MLflow en local (si l'utilisateur n'utilise pas de serveur dédié)
-        \item connexion au serveur MySQL spécifié par l'utilisateur, et création d'une base de données pour IArgus si elle n'existe pas déjà
-        \item lancement de l'API
-    \end{itemize}
-
-    Pour permettre à l'utilisateur de modifier facilement certains aspects de la configuration tels que l'URL du serveur MLflow ou le certificat de sécurité SSL à utiliser, la plupart des paramètres du projet sont gérés dans un fichier de configuration YAML. Ainsi, l'utilisateur n'a pas besoin de toucher au code lorsqu'il change de serveur SMTP pour ses alertes e-mail, par exemple. On notera cependant que certains paramètres tels que le nom d'utilisateur et le mot de passe MySQL ou encore le mot de passe pour se connecter au serveur SMTP sont trop sensibles pour être visibles dans un fichier texte ; ces imformations sont demandées à l'utilisateur lorsqu'il lance le script qui permet d'exécuter IArgus.
+    \subsection{Mise en place du monitorage}
+    \subsection{Intégration de l'API à une application existante}
 
     \newpage
     \section*{Conclusion}

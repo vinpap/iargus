@@ -108,3 +108,45 @@ Ceci permettra aux tests d'IArgus d'être exécutés à chaque fois que vous pou
 
 La dernière étape consiste à spécifier sur Azure la commande qui doit être exécutée pour lancer l'application. Sur la page de votre ressource, cliquez sur "Configuration" et entrez la commande suivante dans le champ "Commande de démarrage" : ```gunicorn -w 4 -k uvicorn.workers.UvicornWorker api:app```. Votre API est maintenant opérationnelle.
 
+**Attention** : le certificat de sécurité joint à cette API a été généré par mes soins. Si vous utilisez un certificat plus sécurisé, vous devez remplacer les valeurs ssl_certificate_path et ssl_key_path dans config.yml pour utiliser votre certificat à la place.
+
+## Mise en place du monitorage
+
+Le script qui effectue le monitorage de l'intelligence artificielle est model_monitoring.py. Ce script est pensé pour être exécuté à intervalles réguliers. Vous pouvez utiliser un service tel qu'Azure Function pour automatiser son exécution, en spécifiant un intervalle d'exécution d'une semaine, par exemple.
+
+Pour fonctionner, ce script a besoin d'un serveur SMTP ainsi que d'informations concernant la personne à qui envoyer des alertes par e-mail en cas de déclin des performances du modèle. Sur la machine qui doit exécuter le script de monitorage, copiez les fichiers suivants :
+- config.yml
+- features_encoder.pkl
+- model_monitoring.py
+- requirements.txt
+
+Puis exécutez ces commandes :
+```
+    export SMTP_LOGIN=<votre identifiant sur le serveur SMTP>
+    export SMTP_RECIPIENT=<l'adresse où envoyer les alertes>
+    export SMTP_PWD=<votre mot de passe sur le serveur SMTP>
+    export SMTP_SERVER=<l'adresse du serveur SMTP>
+    export MLFLOW_HOST=<adresse de votre serveur MLflow>
+    pip install -r requirements.txt
+```
+
+Votre script de monitorage est maintenant fonctionnel.
+
+
+## Intégration à une application existante
+
+Pour utiliser l'API, vous devez préalablement obtenir un token. Pour cela, envoyez une requête POST à l'adresse <URL de votre ressource Azure>/get_token en joignant ces informations au corps de la requête :
+
+![Corps de la requête pour obtemir un token](./img/azure_3.png)
+
+Vous recevrez le token de sécurité comme ceci :
+
+![Réponse](./img/azure_4.png)
+
+Ce token **valable 180 jours uniquement** est obligatoire pour utiliser le endpoint /predict qui vous permet de prédire le prix de vente d'une voiture d'occasion aux États-Unis. Pour utiliser ce endpoint, envoyez-lui une requête POST avec les informations suivantes dans le corps de la requête :
+
+![Corps requête /predict](./img/azure_5.png)
+
+Le prix prédit pour votre voiture sera la valeur "predicted_price" dans les données renvoyées en format JSON.
+
+
