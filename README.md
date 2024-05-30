@@ -24,7 +24,7 @@ pip install mlflow
 mlflow server --host <adresse IP de la machine où vous vous trouvez> 
 ```
 
-**Attention** : cette méthode n'est pas sécurisée. Ainsi, n'importe qui peut utiliser votre serveur sans votre permission s'il connaît votre adresse IP !
+**Attention** : cette méthode n'est pas sécurisée. Ainsi, n'importe qui peut utiliser votre serveur sans votre permission s'il connaît votre adresse IP ! Pensez à définir une whitelist d'adresse IP autorisées à envoyer des requêtes à votre serveur si vous choisissez cette solution.
 - Héberger MLflow en faisant appel à un fournisseur de services de cloud. Plus sécurisée, cette solution est préférable à la solution mentionnée ci-dessus. Rapprochez-vous d'un service d'hébergement comme Microsoft Azure ou Databricks pour consulter leurs tarifs si vous préférez cette solution.
 
 ## Déploiement de l'API
@@ -38,9 +38,7 @@ Il vous faut maintenant créer une ressource Microsoft Web App sur Azure (notez 
 
 Ceci activera le déploiement continu pour IArgus. Validez ensuite la création de l'application.
 
-
-
-Vous remarquerez qu'un dossier .github a automatiquement été créé dans votre dépôt. Ouvrez le fichier YAML présent dans le dossier ./github/workflows. Remplacez la section "on" au début du fichier et remplacez-là par ceci :
+Vous remarquerez qu'un dossier .github a automatiquement été créé dans votre dépôt. Ouvrez le fichier YAML présent dans le dossier ./github/workflows. Remplacez la section "on" au début du fichier par ceci :
 ```
 on:
   push:

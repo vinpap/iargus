@@ -125,7 +125,7 @@
         \centering
     \end{figure}
 
-    Cette application est déployée et disponible sur Microsoft Azure à cette adresse : \href{https://iargus-base-app.azurewebsites.net/}{https://iargus-base-app.azurewebsites.net/}.
+    Cette application est déployée et disponible sur Microsoft Azure à cette adresse : \href{https://iargus-base-app.azurewebsites.net/}{https://iargus-base-app.azurewebsites.net/}. Le code de l'application est quant à lui disponible ici : \href{https://github.com/vinpap/iargus_app}{https://github.com/vinpap/iargus\_app}.
 
     \subsection{Les données disponibles}
     Pour nous permettre de mener notre mission à bien, l'Argus met à notre disposition un jeu de données qui recense plus de 800 000 ventes de voitures d'occasion. Pour chaque transaction sont indiqués :
@@ -207,9 +207,9 @@
 
     \subsection{Implémentation de l'API}
 
-    \textbf{Remarque} : l'API présentée ici est implémentée dans le fichier \href{https://github.com/vinpap/iargus/blob/08493c829a37590847164a2f695db763736b9e35/iargus/api.py}{api.py}, dans le dossier iargus du dépôt.
+    \textbf{Remarque} : l'API présentée ici est implémentée dans le fichier \href{https://github.com/vinpap/iargus/blob/8e63c88368532a1a424799e698f20b873ee2dc4f/api.py}{api.py}.
 
-    L'accès au modèle est contrôlé par une API (\textbf{Application Programming Interface}). Une API sert de façade à un ensemble de fonctionnalités : elle permet à un tiers d'utiliser ces fonctionnalités sans avoir besoin de connaître leur fonctionnement interne. Dans notre cas, notre API permet à des tiers (l'application IArgus, les techniciens de l'équipe de développement) d'utiliser notre modèle d'IA sans connaître les rouages de son fonctionnement.
+    L'accès au modèle est contrôlé par une API (\textbf{Application Programming Interface}). Une API sert de façade à un ensemble de fonctionnalités : elle permet à un tiers d'utiliser ces fonctionnalités sans avoir besoin de connaître leur fonctionnement interne. Dans notre cas, notre API permet à des tiers (l'application IArgus, les techniciens de l'équipe de développement...) d'utiliser notre modèle d'IA sans connaître les rouages de son fonctionnement.
 
     Utiliser une API pour donner accès à un service confère plusieurs avantages :
     \begin{itemize}
@@ -219,10 +219,11 @@
     \end{itemize}
     Une API web accepte des requêtes via plusieurs \textbf{endpoints} ("points de terminaison" en français). Chaque endpoint peut accepter une ou plusieurs méthodes de requêtes HTTPS. Voici les points de terminaison utilisés par l'API d'IArgus :
     \begin{itemize}
-        \item / (racine de l'API) : ce endpoint renvoie un message d'aide qui explique comment utiliser l'API. Il accepte la méthode GET
-        \item /predict : permet de demander à l'IA une estimation de prix à partir des informations envoyées avec la requête. Ce endpoint accepte les requêtes POST.
+        \item / (racine de l'API) : ce endpoint renvoie un message d'aide qui explique comment utiliser l'API.
+        \item /predict : permet de demander à l'IA une estimation de prix à partir des informations envoyées avec la requête.
         \item /get\_token : ce endpoint permet à un utilisateur d'obtenir un token de sécurité qui lui permettra d'utiliser l'API. Ce mécanisme de sécurité est présenté juste après.
     \end{itemize}
+    Tous ces endpoints acceptent uniquement la méthode POST.
 
     \begin{figure}[h!]
         \includegraphics[width=12cm]{api_endpoints}
@@ -252,7 +253,7 @@
 
     Les requêtes sans clé valide sont refusées par l'API, ce qui permet d'éviter que des utilisateurs extérieurs à l'entreprise ou des pirates informatiques n'utilisent l'API sans permission.
 
-    Il est important de mentionner que cette mesure \textbf{ne suffit pas, à elle seule, à empêcher des personnes non autorisées à accéder à l'API.} En effet, n'importe qui peut accéder au endpoint /get\_token. Cependant, le token qui a été envoyé avec une requête peut permettre d'identifier la personne à l'origine de cette requête, ce qui peut notamment être intéressant dans une organisation. Pour véritablement empêcher des personnes non autorisées à accéder à l'API, une solution est de \textbf{tenir une "whitelist" d'adresses IP autorisées à faire des requêtes à l'API}. C'est une solution mise en place dans le cadre de ce projet qui sera détaillée dans la section \ref{mise_en_place}.
+    Il est important de mentionner que cette mesure \textbf{ne suffit pas, à elle seule, à empêcher des personnes non autorisées à accéder à l'API.} En effet, n'importe qui peut accéder au endpoint /get\_token. Cependant, le token qui a été envoyé avec une requête peut permettre d'identifier la personne à l'origine de cette requête, ce qui peut notamment être intéressant dans une organisation. Pour véritablement empêcher des personnes non autorisées à accéder à l'API, une solution est de \textbf{tenir une "whitelist" d'adresses IP autorisées à faire des requêtes à l'API}, en bloquant toutes les autres.
 
 
     Un autre mécanisme de sécurité implémenté est la limitation du nombre de requêtes qu'un utilisateur peut envoyer à l'API dans un court laps de temps. Cela nous permet de protéger notre système des attaques par déni de service, qui consistent à effectuer un grand nombre de requêtes à une URL en un temps très court afin de submerger les capacités du serveur et de le rendre hors service. Dans notre cas, cette protection est d'autant plus importante que notre modèle d'IA consomme beaucoup de mémoire et de ressources de calcul. Ainsi, un grand nombre de requêtes simultanées à /predict pourrait rapidement submerger le serveur où notre IA est déployée.
@@ -271,7 +272,7 @@
         \caption{Une page web a été ajoutée à l'application IArgus pour communiquer l'estimation de prix à l'utilisateur.}
     \end{figure}
 
-    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
+    Il nous reste maintenant à intégrer l'API d'IArgus à l'application web existante. Comme nous l'avons mentionné dans la section qui décrit le fonctionnement de l'API, un avantage des API est qu'elles permettent d'intégrer facilement une fonctionnalité à une application. Dans notre cas, l'intégration a été réalisée en modifiant la fonction Python qui gère la façon dont les requêtes envoyées à l'URL de la page du formulaire sont traitées. Lorsqu'un formulaire est soumis, l'application envoie une requête à l'URL où est déployée l'API IArgus avec les informations entrées par l'utilisateur (pour plus de flexibilité, l'URL de l'API est définie dans un fichier YAML facilement modifiable, \href{https://github.com/vinpap/iargus_app/blob/4b5f8b114a623f38f883587913b486281657ead5/config.yml}{config.yml}). Une fois la prédiction réalisée et le prix estimé renvoyé par l'API, l'application affiche une page web qui montre le prix à l'utilisateur.
 
     Le token de l'API est stocké dans une variable d'environnement sur le serveur qui exécute l'application. Cependant, il faut également prévoir les cas suivants :
     \begin{itemize}
@@ -279,13 +280,13 @@
         \item un token est défini, mais il a expiré.
     \end{itemize}
 
-    Lorsqu'un utilisateur valide le formulaire avec les informations de sa voiture, une vérification est effectuée pour vérifier ces deux conditions. Si l'application n'a effectivement pas de token valide, elle envoit alors automatiquement une requête au endpoint /get\_token de l'API, en lui donnant pour identifiants les nom, prénom et adresse e-mail de l'administrateur qui sont stockés dans le fichier de configuration de l'application \href{https://github.com/vinpap/iargus_app/blob/386366798c97bc3b68ac874ca10d640cb5d20902/config.yml}{config.yml}. Le token renvoyé par l'API est alors stocké en variable d'environnement, et une nouvelle requête est envoyée à /predict, cette fois-ci avec le nouveau token.
+    Lorsqu'un utilisateur valide le formulaire avec les informations de sa voiture, une vérification est effectuée pour vérifier ces deux conditions. Si l'application n'a effectivement pas de token valide, elle envoit alors automatiquement une requête au endpoint /get\_token de l'API, en lui donnant pour identifiants les nom, prénom et adresse e-mail de l'administrateur qui sont stockés dans le fichier de configuration de l'application \href{https://github.com/vinpap/iargus_app/blob/4b5f8b114a623f38f883587913b486281657ead5/config.yml}{config.yml}. Le token renvoyé par l'API est alors stocké en variable d'environnement, et une nouvelle requête est envoyée à /predict, cette fois-ci avec le nouveau token.
 
     \section{Monitorage du modèle}
 
     Le suivi du modèle englobe les composants qui nous permettent de visualiser les performances du modèle au cours du temps et d'envoyer des alertes si jamais celles-ci passent en-dessous d'un seuil acceptable. 
     
-    Avant de détailler le fonctionnement de ces composants, parlons de la métrique utilisée pour évaluer les performances de notre modèle. Lors de la présentation des exigences du client, nous avons vu que ce dernier souhaitait garantir que les prix prédits se situaient en moyenne dans un intervalle de 20\% autour des prix réels. Ce critère de performances correspond à \textbf{l'erreur absolue moyenne en pourcentage}, souvent appelée \textbf{MAPE} pour "Mean Absolute Percentage Error". Cette métrique nous indique le pourcentage moyen d'erreur d'un modèle par rapport aux valeurs réelles, ce qui correspond bien à ce que nous demande notre client. Par conséquent, \textbf{la MAPE sera utilisée comme métrique de référence dans la suite de ce dossier.} On considèrera ainsi qu'une MAPE de 20\% resprésente le seuil de performances à ne pas dépasser. Un modèle qui a une MAPE supérieure à ce seuil devra donc être \textbf{réentraîné}.
+    Avant de détailler le fonctionnement de ces composants, parlons de la métrique utilisée pour évaluer les performances de notre modèle. Lors de la présentation des exigences du client, nous avons vu que ce dernier souhaitait garantir que les prix prédits se situaient en moyenne dans un intervalle de 20\% autour des prix réels. Ce critère de performances correspond à \textbf{l'erreur absolue moyenne en pourcentage}, souvent appelée \textbf{MAPE} pour "Mean Absolute Percentage Error". Cette métrique nous indique le pourcentage moyen d'erreur d'un modèle par rapport aux valeurs réelles, ce qui correspond bien à ce que nous demande notre client. Par conséquent, \textbf{la MAPE sera utilisée comme métrique de référence dans la suite de ce dossier.} On considèrera ainsi qu'une MAPE de 20\% représente le seuil de performances à ne pas dépasser. Un modèle qui a une MAPE supérieure à ce seuil devra donc être \textbf{réentraîné}.
 
     \begin{figure}[h!]
         \begin{equation}MAPE = \frac {\sum \frac{\lvert A-P \rvert}{A} \times 100}{N}  \end{equation}
@@ -303,7 +304,7 @@
 
     \subsection{Le script de monitorage}
 
-    Le script de monitorage est \href{https://github.com/vinpap/iargus/blob/981ff9fa80fa4b729df37a93b5966d41e86d6966/iargus/model_monitoring.py}{model\_monitoring.py}. Dans le cadre de ce dossier, il a été déployé sur \href{https://www.pythonanywhere.com/}{PythonAnywhere} où il est exécuté périodiquement.
+    Le script de monitorage est model\_monitoring.py. Dans le cadre de ce dossier, il a été déployé sur \href{https://www.pythonanywhere.com/}{PythonAnywhere} où il est exécuté périodiquement (une fois par mois).
 
     Lors de son exécution, le script de monitorage commence par collecter les données depuis la base de données MySQL. Celles-ci sont stockées dans une table car\_details qui recense également la date d'ajout de chaque transaction dans la base de données. Cette information est essentielle car c'est elle qui permet au script de savoir quelles données utiliser pour tester le modèle. En effet, seules les données ajoutées à la base de données après le dernier entraînement du modèle sont utilisées. L'intérêt est de vérifier que le modèle reste performant même avec des données qu'il n'a jamais vues et d'éviter le \textbf{concept drift}. Le concept drift est un phénomène de dégradation des performances d'un modèle lorsque la relation entre les variables d'entrée et de sortie d'un modèle a changé depuis que celui-ci a été entraîné. 
     
@@ -329,7 +330,7 @@
         \caption{Un serveur SMTP est nécessaire pour envoyer automatiquement un e-mail. Ici, un exemple d'e-mail envoyé en utilisant le serveur de GMail.}
     \end{figure}
 
-    Dans le deuxième cas, l'alerte est lancée via un e-mail envoyé automatiquement par le script de monitorage. Pour cela, le script passe par un serveur SMTP, dont l'URL et le port à utiliser sont paramétrables dans un fichier de configuration YAML. Il est possible d'utiliser un serveur SMTP comme celui de GMail, ou de coder le sien. Le serveur de GMail a été utilisé pour réaliser les tests nécessaires à l'élaboration de ce dossier.
+    Dans le deuxième cas, l'alerte est lancée via un e-mail envoyé automatiquement par le script de monitorage. Pour cela, le script passe par un serveur SMTP, dont l'URL et le port à utiliser sont définis dans des variables d'environnement. Il est possible d'utiliser un serveur SMTP comme celui de GMail, ou de coder le sien. Le serveur de GMail a été utilisé pour réaliser les tests nécessaires à l'élaboration de ce dossier.
 
 
     \subsection{le dashboard}
@@ -344,7 +345,7 @@
 
     Dans notre cas, nous exécutons MLFlow sur un serveur local rendu public grâce à cette commande :
     \begin{verbatim}
-        mlflow server --host <adresse e-mail de la machine qui exécute cette commande>
+        mlflow server --host <adresse IP de la machine qui exécute cette commande>
     \end{verbatim}
 
     Il est important de noter que le serveur ainsi créé n'est pas sécurisé et reste utilisable par n'importe qui. Deux solutions sont possibles pour pallier à ce problème :
@@ -367,7 +368,7 @@
 
     \section{Tests et intégration continue}
 
-    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier \href{https://github.com/vinpap/iargus/tree/08493c829a37590847164a2f695db763736b9e35/iargus/test}{test}, ces tests se divisent en deux catégories :
+    Des tests unitaires ont été développés pour garantir le bon fonctionnement d'IArgus. Disponibles dans le dossier \href{https://github.com/vinpap/iargus/tree/8e63c88368532a1a424799e698f20b873ee2dc4f/test}{test}, ces tests se divisent en deux catégories :
     \begin{itemize}
         \item les tests unitaires qui vérifient le bon fonctionnement des différentes fonctions du script de monitorage
         \item les tests de points de terminaison codés grâce aux fonctionnalités de test proposées par FastAPI. Ces tests simulent l'envoi de requêtes aux différents points de terminaison de l'API et vérifient que les données renvoyées par l'API sont conformes à celles que l'on attend.
@@ -375,7 +376,7 @@
 
     Les tests du monitorage couvrent les situations suivantes :
     \begin{itemize}
-        \item on vérifie que la conversion des variables catégoriques dans les données (comme la marque des voitures, par exemple) a bien fonctionné, notamment en s'assurant qu'une variable encodée en \textit{one-hot} vector ne compte qu'un seul 1 dams le vecteur obtenu
+        \item on vérifie que la conversion des variables catégoriques dans les données (comme la marque des voitures, par exemple) a bien fonctionné, notamment en s'assurant qu'une variable encodée en vecteur \textit{one-hot} ne compte qu'au plus une seule valeur à 1 dans le vecteur obtenu
         \item on vérifie également que la MAPE calculée par la fonction de test est bien comprise entre 0 et 1.
     \end{itemize}
 
@@ -390,10 +391,9 @@
         \item pour /get\_token : on s'assure qu'aucun token n'est renvoyé si l'adresse e-mail fournie ne respecte pas le bon format.
     \end{itemize}
 
-    Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans le fichier de configuration \href{https://github.com/vinpap/iargus/blob/fea8247513304d645d6cb4ff5857fe8951ff95e0/.github/workflows/master_vincent-iargus.yml}{master\_vincent-iargus.yml} lu automatiquement par la machine virtuelle qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
+    Par ailleurs, ces tests ont été automatisés grâce à la fonctionnalité \textbf{GitHub Action}. Ainsi, pousser le code local vers le dépôt distant sur GitHub ou fusionner une branche avec la branche master lance automatiquement les tests. Leur exécution est paramétrée dans le fichier de configuration \href{https://github.com/vinpap/iargus/blob/8e63c88368532a1a424799e698f20b873ee2dc4f/.github/workflows/master_vincent-iargus.yml}{master\_vincent-iargus.yml} lu automatiquement par le runner qui exécute les tests sur les serveurs de GitHub. Ce fichier de configuration spécifie une liste de commandes à exécuter dans un ordre précis pour réaliser les actions suivantes :
     \begin{itemize}
         \item installer toutes les dépendances du projet dans un environnement virtuel avec pipenv
-        \item lancer MLflow sur l'hôte local
         \item exécuter un script setup\_tests.py qui met en place les différents éléments nécessaires à l'exécution des tests (chargement d'un jeu de données de test fourni dans le dépôt, entraînement d'un modèle avec ces données)
         \item exécuter les tests avec pytest.
     \end{itemize}
@@ -413,33 +413,207 @@
     
     Comme on peut le constater dans la capture d'écran ci-dessus, GitHub Action n'est pas uniquement utile pour l'automatisation de tests. Ici, nous nous en servons également pour déployer automatiquement l'API sur Microsoft Azure. Dans les faits, les actions suivantes sont effectués lorsque du code est poussé ou fusionné sur la branche master :
     \begin{itemize}
-        \item comme nous venons de le voir, les tests de l'API et du monitorage sont exécutés
+        \item comme nous venons de le voir, les tests de l'API et du monitorage sont exécutés.
         \item en parallèle, le code est déployé sur Microsoft Azure, qui installe les dépendances nécessaires et lance l'application en utilisant la commande de démarrage spécifiée dans les paramètres de notre application sur la ressource Azure.
     \end{itemize}
     
 
     \section{Mise en place de IArgus} \label{mise_en_place}
 
-    Cette section couvre la mise en place des différents composants d'IArgus. il s'agit de la documentation présentée dans \href{https://github.com/vinpap/iargus/blob/fca4c4c15cce4cdcf9302b8a4ca29ca033c4686a/README.md}{le fichier README} du dépôt.
+    Cette section couvre la mise en place des différents composants d'IArgus. Il s'agit de la documentation présentée dans \href{https://github.com/vinpap/iargus}{la page d'accueil} du dépôt.
 
-    \subsection{Installation de la base de données}
+    Prérequis :
+    \begin{itemize}
+        \item Git
+        \item Python 
+        \item Pip
+    \end{itemize}
+
+    Avant toute chose, dupliquez ce dépôt en cliquant sur l'icône "Fork" en haut à droite de l'écran puis poussez votre dépôt sur GitHub.
+
+    \subsection{Installation de la base de données MySQL}
+
+    Pour commencer, mettons en place le serveur MySQL nécessaire à l'API et au script de monitorage du modèle d'intelligence artificielle. Ce serveur compte deux bases de données qui stockent respectivement :
+    \begin{itemize}
+        \item les tokens générés par l'API, ainsi que les identifiants des utilisateurs pour qui ces tokens ont été générés
+        \item les données de ventes de voiture utilisées pour effectuer le monitorage.
+    \end{itemize}
+
+    Vous pouvez installer MySQL sur une machine dédiée et l'utiliser comme serveur, ou faire appel à un fournisseur de cloud pour héberger votre base de données. Pour simplifier la mise en place des bases de données, il vous suffit d'exécuter le script "db\_creation.sql" présent dans ce dépôt sur votre serveur en utilisant la commande suivante dans la racine du dépôt Git :
+    \begin{verbatim}
+        mysql -h <hôte de votre serveur MySQL> -u <votre nom d'utilisateur> < db_creation.sql
+    \end{verbatim}
+
     \subsection{Lancement de MLflow}
+
+    Plusieurs solutions sont disponibles pour héberger MLflow. Vous pouvez :
+    \begin{itemize}
+        \item Héberger MLflow sur une machine dédiée et rendre votre serveur public. Pour cela, exécutez ces commandes :
+            \begin{verbatim}
+                pip install mlflow
+                mlflow server --host <adresse IP de la machine où vous vous trouvez> 
+            \end{verbatim}
+            \textbf{Attention} : cette méthode n'est pas sécurisée. Ainsi, n'importe qui peut utiliser votre serveur sans votre permission s'il connaît votre adresse IP ! Pensez à définir une whitelist d'adresse IP autorisées à envoyer des requêtes à votre serveur si vous choisissez cette solution.
+        \item Héberger MLflow en faisant appel à un fournisseur de services de cloud. Plus sécurisée, cette solution est préférable à la solution mentionnée ci-dessus. Rapprochez-vous d'un service d'hébergement comme Microsoft Azure ou Databricks pour consulter leurs tarifs si vous préférez cette solution.
+    \end{itemize}
+
     \subsection{Déploiement de l'API}
 
+    Cette section vous montre comment déployer l'API IArgus sur le service Web App proposé par Microsoft Azure. Tout d'abord, supprimez le dossier ".github" du dépôt que vous avez forké puis créez un nouveau dépôt sur GitHub et poussez-y le vôtre.
+
+    Il vous faut maintenant créer une ressource Microsoft Web App sur Azure (notez que vous aurez besoin d'un abonnement pour cela). \href{https://www.scholarhat.com/tutorial/azure/creating-web-app-tutorial-pricing}{Ce tutoriel} explique la marche à suivre. \textbf{Attention} : pendant la création de votre ressource, à l'étape "déploiement", activez le déploiement continu en renseignant votre compte GitHub ainsi que les informations concernant le dépôt où vous avez poussé IArgus comme le montre la capture d'écran présentée sur la figure 15.
+
+    \begin{figure}[h]
+        \includegraphics[width=10cm]{azure}
+        \centering
+        \caption{Renseignez les informations de votre dépôt GitHub pour activer le déploiement continu}
+    \end{figure}
+
+    Ceci activera le déploiement continu pour IArgus. Validez ensuite la création de l'application.
+
+    Vous remarquerez qu'un dossier .github a automatiquement été créé dans votre dépôt. Ouvrez le fichier YAML présent dans le dossier ./github/workflows. Remplacez la section "on" au début du fichier par ceci :
+    \begin{verbatim}
+        on:
+            push:
+                branches:
+                - "master"
+            pull_request:
+                branches:
+                - "master"
+            workflow_dispatch:
+
+        env: 
+            MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+            MYSQL_PWD: ${{ secrets.MYSQL_PWD }}
+            MYSQL_USER: ${{ secrets.MYSQL_USER }}
+            MLFLOW_HOST: ${{ secrets.MLFLOW_HOST }}
+    \end{verbatim}
+
+    Remplacez "master" par le nom de la branche d'où est déployé votre application si nécessaire. La section "env" définit des variables d'environnement nécessaires à l'exécution des tests d'IArgus. Remarquez que leurs valeurs n'apparaissent pas dans le fichier : il faut les définir en tant que secrets via l'interface de GitHub. Rendez-vous donc dans les paramètres de votre dépôt et définissez les secrets suivants :
+    \begin{itemize}
+        \item MYSQL\_HOST : l'adresse de la base de données
+        \item MYSQL\_PWD : le mot de passe de votre base de données
+        \item MYSQL\_USER : votre nom d'utilisateur sur votre serveur MySQL
+        \item MLFLOW\_HOST : L'adresse IP du serveur où vous avez exécuté MLflow.
+    \end{itemize}
+
+    Ces variables d'environnement doivent aussi être définies dans l'environnement de votre ressource sur Azure. Sur la page de votre ressource, cliquez sur "Paramètres" à gauche puis rendez-vous dans la section "Variables d'environnement". Sur l'écran qui apparaît, créez quatre variables d'environnement qui portent le même nom et ont les mêmes valeurs que les quatre variables définies plus haut. Votre écran devrait ressembler à la capture d'écran présentée dans la figure 16.
+
+    \begin{figure}[h]
+        \includegraphics[width=10cm]{azure_2}
+        \centering
+        \caption{Les variables d'environnement doivent aussi être définies sur la ressource Azure Web App}
+    \end{figure}
+
+    Enfin, avant la section "build" dans le fichier YAML, insérez ce code :
+    \begin{verbatim}
+        test:
+            runs-on: ubuntu-latest
+        
+            strategy:
+            matrix:
+                # Run in all these versions of Python
+                python-version: [3.8, 3.9]
+            steps:
+                # Setup which version of Python to use
+            - name: Checkout repository files
+                uses: actions/checkout@v2
+            - name: Set Up Python ${{ matrix.python-version }}
+                uses: actions/setup-python@v2
+                with:
+                python-version: ${{ matrix.python-version }}
+        
+                # Display the Python version being used
+            - name: Display Python version
+                run: python -c "import sys; print(sys.version)"
+        
+                # Install pytest
+            - name: Install pytest and dependencies
+                run: |
+                python -m pip install --upgrade pip
+                pip install pipenv
+                pipenv install
+                # Run the tests
+            - name: Run tests
+                run: |
+                pipenv run mlflow server --host 127.0.0.1 --port 8080 & pipenv run python setup_tests.py
+                pipenv run python -m pytest
+    \end{verbatim}
+
+    Ceci permettra aux tests d'IArgus d'être exécutés à chaque fois que vous pousserez ou fusionnerez du code sur la branche spécifiée au début du fichier. Vous pouvez maintenant pousser votre code sur GitHub pour appliquer les changements.
+
+    La dernière étape consiste à spécifier sur Azure la commande qui doit être exécutée pour lancer l'application. Sur la page de votre ressource, cliquez sur "Configuration" et entrez la commande suivante dans le champ "Commande de démarrage" : 
+
+    \begin{verbatim}
+        gunicorn -w 4 -k uvicorn.workers.UvicornWorker api:app
+    \end{verbatim} 
+    
+    Votre API est maintenant opérationnelle.
+    
+    \textbf{Attention} : le certificat de sécurité joint à cette API a été généré par mes soins. Si vous utilisez un certificat plus sécurisé, vous devez remplacer les valeurs \textbf{ssl\_certificate\_path} et \textbf{ssl\_key\_path} dans config.yml pour utiliser votre certificat à la place.
 
     \subsection{Mise en place du monitorage}
+
+    Le script qui effectue le monitorage de l'intelligence artificielle est model\_monitoring.py. Ce script est pensé pour être exécuté à intervalles réguliers. Vous pouvez utiliser un service tel qu'Azure Function pour automatiser son exécution, en spécifiant un intervalle d'exécution d'une semaine, par exemple.
+
+    Pour fonctionner, ce script a besoin d'un serveur SMTP ainsi que d'informations concernant la personne à qui envoyer des alertes par e-mail en cas de déclin des performances du modèle. Sur la machine qui doit exécuter le script de monitorage, copiez les fichiers suivants dans le même dossier :
+    \begin{itemize}
+        \item config.yml
+        \item features\_encoder.pkl
+        \item model\_monitoring.py
+        \item requirements.txt
+    \end{itemize}
+
+    Puis exécutez ces commandes :
+    \begin{verbatim}
+        export SMTP_LOGIN=<votre identifiant sur le serveur SMTP>
+        export SMTP_RECIPIENT=<l'adresse où envoyer les alertes>
+        export SMTP_PWD=<votre mot de passe sur le serveur SMTP>
+        export SMTP_SERVER=<l'adresse du serveur SMTP>
+        export MLFLOW_HOST=<adresse de votre serveur MLflow>
+        pip install -r requirements.txt
+    \end{verbatim}
+    
+    Votre script de monitorage est maintenant fonctionnel.
+    
     \subsection{Intégration de l'API à une application existante}
 
-    \newpage
+    Pour utiliser l'API, vous devez préalablement obtenir un token. Pour cela, envoyez une requête POST à l'adresse \textbf{<URL de votre ressource Azure>/get\_token} en joignant ces informations au corps de la requête :
+
+    \begin{figure}[h]
+        \includegraphics[width=12cm]{azure_3}
+        \centering
+        \caption{Les données à transmettre dans le corps de la requête à /get\_token pour obtenir un token}
+    \end{figure}
+
+    Vous recevrez le token de sécurité comme ceci :
+
+    \begin{figure}[h]
+        \includegraphics[width=12cm]{azure_4}
+        \centering
+        \caption{Le token vous est ensuite renvoyé en format JSON}
+    \end{figure}
+
+    Ce token \textbf{valable 180 jours uniquement} est obligatoire pour utiliser le endpoint /predict qui vous permet de prédire le prix de vente d'une voiture d'occasion aux États-Unis. Pour utiliser ce endpoint, envoyez-lui une requête POST avec les informations suivantes dans le corps de la requête :
+
+    \begin{figure}[h]
+        \includegraphics[width=8cm]{azure_5}
+        \centering
+        \caption{Les informations à transmettre à l'API pour obtenir une prédiction de prix}
+    \end{figure}
+
+    Le prix prédit pour votre voiture sera la valeur "predicted\_price" dans les données renvoyées en format JSON.
+
+
     \section*{Conclusion}
     
     Ce dossier a présenté l'intégration d'un service d'intelligence artificielle à une application web existante via une API. Toutes les étapes ont été couvertes, du choix du modèle à la conception de scripts d'installation en passant par la mise en place d'un système de tracking des performances de l'IA.
 
     Cependant, certains aspects du projet restent améliorables :
     \begin{itemize}
-        \item pour plus de sécurité, l'API pourrait mettre en place un système de gestion des utilisateurs et générer une clé de sécurité unique pour chacun. Cela éviterait d'utiliser une seule clé de sécurité et permettrait d'authentifier les utilisateurs de l'API
-        \item IArgus pourrait être configuré pour envoyer des alertes par e-mail à une liste d'adresses e-mail, et pas à une seule adresse comme c'est le cas actuellement
-        \item enfin, des scripts d'installation et d'exécution pourraient être écrits pour permettre de déployer IArgus sur un serveur Windows.
+        \item Le script de monitorage pourrait être configuré pour envoyer des alertes par e-mail à une liste d'adresses e-mail, et pas à une seule adresse comme c'est le cas actuellement
+        \item Le serveur MLflow pourrait être hébergé sur un service de cloud dédié pour une meilleure sécurité
+        \item Des scripts d'installation en Bash et/ou Powershell pourraient être fournis pour faciliter l'installation des différents composants du projet.
     \end{itemize}
 
     \addcontentsline{toc}{section}{Conclusion}
