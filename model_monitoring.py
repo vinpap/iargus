@@ -22,9 +22,22 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.callbacks import EarlyStopping
 
 
-mlflow.set_tracking_uri(uri=os.environ["MLFLOW_HOST"])
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', filename='monitoring.log', level=logging.INFO)
 logger = logging.getLogger()
+
+def should_run() -> bool:
+    """
+    Compares the current date with the last monitoring date stored in
+    monitoring_cfg.yml. Returns True if more than a month has passed, False
+    otherwise.
+    """
+    with open("./config.yml", "r") as config_file:
+        cfg = yaml.safe_load(config_file)
+        last_running_date = cfg["monitoring"]["last_training"]
+    current_date = date.today()
+    time_diff = current_date - last_running_date
+    return time_diff.days >= 30
 
 
 def get_data(most_recent_only: bool=False, last_training_date=date.today()):
@@ -173,7 +186,13 @@ def test_model(X_test, y_test):
 
 if __name__ == "__main__":
 
+    # Checking if the script should be running
+    # If it ran less than a month ago, we interrupt it
+    if not should_run():
+        sys.exit(0)
+
     # If no model has been trained, we train one now
+    mlflow.set_tracking_uri(uri=os.environ["MLFLOW_HOST"])
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='iargus'")
     if len(model_versions) == 0:
