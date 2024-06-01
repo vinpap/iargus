@@ -110,7 +110,7 @@ La dernière étape consiste à spécifier sur Azure la commande qui doit être 
 
 ## Mise en place du monitorage
 
-Le script qui effectue le monitorage de l'intelligence artificielle est model_monitoring.py. Ce script est pensé pour être exécuté à intervalles réguliers. Vous pouvez utiliser un service tel qu'Azure Function pour automatiser son exécution, en spécifiant un intervalle d'exécution d'une semaine, par exemple.
+Le script qui effectue le monitorage de l'intelligence artificielle est model_monitoring.py. Ce script est pensé pour être exécuté une fois par mois. Vous pouvez utiliser un service tel qu'Azure Function pour automatiser son exécution, en spécifiant un intervalle d'exécution de un mois.
 
 Pour fonctionner, ce script a besoin d'un serveur SMTP ainsi que d'informations concernant la personne à qui envoyer des alertes par e-mail en cas de déclin des performances du modèle. Sur la machine qui doit exécuter le script de monitorage, copiez les fichiers suivants :
 - config.yml
